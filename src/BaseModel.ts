@@ -1,7 +1,8 @@
 import { IHTTPClient, IPK, IResource, IResourceItem } from "types";
 import { Restate } from "@/Restate";
+import { CoreModel } from "./CoreModel";
 
-class Model<RI extends IResourceItem = IResourceItem> {
+class BaseModel<RI extends IResourceItem = IResourceItem> extends CoreModel {
   private $resource: IResource<RI>;
 
   private $httpClient: IHTTPClient;
@@ -9,11 +10,7 @@ class Model<RI extends IResourceItem = IResourceItem> {
   private $pk: string;
 
   constructor(private $resourceName: string, private $restate: Restate) {
-    if ($restate.has($resourceName)) {
-      throw new Error(`RESTATE ERROR: there is already a Model that the resource name is '${$resourceName}'`);
-    }
-
-    $restate.set($resourceName, this);
+    super($resourceName, $restate);
 
     this.$pk = "id";
 
@@ -34,6 +31,10 @@ class Model<RI extends IResourceItem = IResourceItem> {
   public async index(): Promise<RI[]> {
     const data = await this.$httpClient.get<RI[]>(`/${this.$resourceName}`);
 
+    if (!Array.isArray(data)) {
+      throw new TypeError("A resposta da requisição http deve ser um array.");
+    }
+
     data.forEach(item => this.$resource.set(item[this.$pk], item));
 
     return this.$resource.getAll();
@@ -42,6 +43,10 @@ class Model<RI extends IResourceItem = IResourceItem> {
   public async show(id: IPK): Promise<RI | undefined> {
     const item = await this.$httpClient.get<RI>(`/${this.$resourceName}/${id}`);
 
+    if (item !== null && typeof item !== "object") {
+      throw new TypeError("A resposta da requisição http deve ser um objeto.");
+    }
+
     this.$resource.set(item[this.$pk], item);
 
     return this.$resource.get(id);
@@ -49,6 +54,10 @@ class Model<RI extends IResourceItem = IResourceItem> {
 
   public async store(data: Record<string, number | string>): Promise<this> {
     const item = await this.$httpClient.post<RI>(`/${this.$resourceName}`, data);
+
+    if (item !== null && typeof item !== "object") {
+      throw new TypeError("A resposta da requisição http deve ser um objeto.");
+    }
 
     this.$resource.set(item[this.$pk], item);
 
@@ -75,4 +84,4 @@ class Model<RI extends IResourceItem = IResourceItem> {
   }
 }
 
-export { Model };
+export { BaseModel };

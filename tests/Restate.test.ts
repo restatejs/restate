@@ -1,4 +1,4 @@
-import { Model } from "@/Model";
+import { CoreModel } from "@/CoreModel";
 import { Restate } from "@/Restate";
 import { IHTTPClient, IStore } from "types";
 
@@ -8,7 +8,7 @@ const store = {} as IStore;
 
 const restate = new Restate(httpClient, store);
 
-const usersModel = {} as Model;
+const usersModel = {} as CoreModel;
 
 const $models = Reflect.get(restate, "$models") as Restate["$models"];
 

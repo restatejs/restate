@@ -1,21 +1,21 @@
 import { IHTTPClient } from "types/httpClient";
 import { IStore } from "types";
-import { Model } from "@/Model";
+import { CoreModel } from "@/CoreModel";
 
 class Restate {
-  private $models: Map<string, Model> = new Map();
+  private $models: Map<string, CoreModel> = new Map();
 
   constructor(public httpClient: IHTTPClient, public store: IStore) { }
 
-  public get(resourceName: string): Model | undefined {
+  public get(resourceName: string): CoreModel | undefined {
     return this.$models.get(resourceName);
   }
 
-  public entries(): IterableIterator<[string, Model]> {
+  public entries(): IterableIterator<[string, CoreModel]> {
     return this.$models.entries();
   }
 
-  public set(resourceName: string, model: Model): this {
+  public set(resourceName: string, model: CoreModel): this {
     this.$models.set(resourceName, model);
 
     return this;

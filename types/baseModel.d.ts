@@ -1,7 +1,8 @@
 import { IHTTPClient, IPK, IResource, IResourceItem } from ".";
 import { Restate } from "@/Restate";
+import { CoreModel } from "@/CoreModel";
 
-export declare class Model<RI extends IResourceItem = IResourceItem> {
+export declare class Model<RI extends IResourceItem = IResourceItem> extends CoreModel {
   private $resource: IResource<RI>;
 
   private $httpClient: IHTTPClient;
