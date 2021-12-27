@@ -24,6 +24,7 @@ module.exports = {
       name: 'restate',
       type: 'umd',
     },
+    globalObject: 'this',
   },
   optimization: {
     minimizer: [new TerserPlugin({
