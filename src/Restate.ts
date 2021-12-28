@@ -1,11 +1,11 @@
-import { IHTTPClient } from "types/httpClient";
-import { IStore } from "types";
+import { IStore, IHTTPClient } from "types";
+
 import { CoreModel } from "@/CoreModel";
 
 class Restate {
   private $models: Map<string, CoreModel> = new Map();
 
-  constructor(public httpClient: IHTTPClient, public store: IStore) { }
+  constructor(public httpClient: IHTTPClient, public store: IStore) {}
 
   public get(resourceName: string): CoreModel | undefined {
     return this.$models.get(resourceName);

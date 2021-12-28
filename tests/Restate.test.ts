@@ -1,6 +1,7 @@
+import { IHTTPClient, IStore } from "types";
+
 import { CoreModel } from "@/CoreModel";
 import { Restate } from "@/Restate";
-import { IHTTPClient, IStore } from "types";
 
 const httpClient = {} as IHTTPClient;
 
@@ -15,7 +16,6 @@ const $models = Reflect.get(restate, "$models") as Restate["$models"];
 describe("Restate", () => {
   test("set", () => {
     expect($models.get("users")).toBe(undefined);
-
 
     restate.set("users", usersModel);
 

@@ -1,6 +1,7 @@
+import { IHTTPClient, IStore } from "types";
+
 import { CoreModel } from "@/CoreModel";
 import { Restate } from "@/Restate";
-import { IHTTPClient, IStore } from "types";
 
 const httpClient = {} as IHTTPClient;
 
