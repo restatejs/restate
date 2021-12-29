@@ -1,4 +1,4 @@
-import { CoreModel } from "@/CoreModel";
+import { CoreModel } from "@/models/CoreModel";
 
 import { IHTTPClient } from "./httpClient";
 import { IStore } from "./store";

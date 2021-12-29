@@ -1,6 +1,5 @@
 import { Restate } from "./Restate";
 
-export * from "./CoreModel";
-export * from "./BaseModel";
+export * from "./models/CoreModel";
 
 export default Restate;
