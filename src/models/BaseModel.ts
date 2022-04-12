@@ -1,46 +1,26 @@
 import {
-  DestroyOptions,
   HTTPResponseCollection,
   HTTPResponseItem,
-  IHTTPClient,
   IndexOptions,
   IPK,
-  IResource,
-  IResourceCollection,
-  IResourceItem,
   ShowOptions,
   StoreOptions,
   UpdateOptions,
+  DestroyOptions,
 } from "types";
 
-import { Restate } from "@/Restate";
+import Restate from "..";
 
 import { CoreModel } from "./CoreModel";
 
-class BaseModel<RI extends IResourceItem = IResourceItem> extends CoreModel {
-  public $resource: IResource<RI>;
+class BaseModel<RI> extends CoreModel<RI> {
+  protected $pk = "id";
 
-  public $httpClient: IHTTPClient;
-
-  private $pk: string;
-
-  constructor(private $resourceName: string, private $restate: Restate) {
+  constructor(public $resourceName: string, public $restate: Restate) {
     super($resourceName, $restate);
-
-    this.$pk = "id";
-
-    this.$httpClient = $restate.httpClient;
-
-    if (!this.$restate.store.has($resourceName)) {
-      this.$resource = this.$restate.store.add<RI>($resourceName);
-    } else {
-      this.$resource = this.$restate.store.get<RI>($resourceName);
-    }
   }
 
-  public async index(
-    options?: IndexOptions<RI>
-  ): Promise<IResourceCollection<RI>> {
+  public async index(options?: IndexOptions<RI>): Promise<RI[]> {
     let url = `/${this.$resourceName}`;
 
     if (options?.query) {
@@ -58,7 +38,8 @@ class BaseModel<RI extends IResourceItem = IResourceItem> extends CoreModel {
         this.$resource.clear();
       }
 
-      data.forEach((item) => this.$resource.set(item[this.$pk], item));
+
+      data.forEach((item: any) => this.$resource.set(item[this.$pk], item));
     } else {
       options.store(this.$resource, response);
     }
@@ -81,7 +62,7 @@ class BaseModel<RI extends IResourceItem = IResourceItem> extends CoreModel {
     if (!options?.store) {
       const { data } = response;
 
-      this.$resource.set(data[this.$pk], data);
+      this.$resource.set((data as any)[this.$pk], data);
     } else {
       options.store(this.$resource, response);
     }
@@ -107,7 +88,7 @@ class BaseModel<RI extends IResourceItem = IResourceItem> extends CoreModel {
     if (!options?.store) {
       const { data } = response;
 
-      this.$resource.set(data[this.$pk], data);
+      this.$resource.set((data as any)[this.$pk], data);
     } else {
       options.store(this.$resource, response);
     }

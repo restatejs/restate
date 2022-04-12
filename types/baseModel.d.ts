@@ -1,66 +1,54 @@
-import { CoreModel } from "@/models/CoreModel";
-import { Restate } from "@/Restate";
+import { IPK, IResource, IResourceItem } from "types";
 
-import {
-  IHTTPClient,
-  IPK,
-  IResource,
-  IResourceCollection,
-  IResourceItem,
-} from ".";
+import { Restate, CoreModel } from "@/index";
 
 export interface HTTPConfig {
   url: string;
 }
 
-export interface HTTPResponse<R extends IResourceItem | IResourceCollection> {
+export interface HTTPResponse<R extends Object | []> {
   data: R;
   meta: Record<string, unknown>;
 }
 
-export type HTTPResponseItem<RI extends IResourceItem> = HTTPResponse<RI>;
+export type HTTPResponseItem<RI> = HTTPResponse<RI>;
 
-export type HTTPResponseCollection<RI extends IResourceItem> = HTTPResponse<
-  IResourceCollection<RI>
+export type HTTPResponseCollection<RI> = HTTPResponse<
+  RI[]
 >;
 
-export interface MethodOptions<
-  RI extends IResourceItem,
-  R extends IResourceItem | IResourceCollection
-> {
+export interface IndexOptions<RI> {
   query?: Record<string, string>;
   store?: (resource: IResource<RI>, response: HTTPResponse<R>) => void;
-}
-
-export interface IndexOptions<RI extends IResourceItem>
-  extends MethodOptions<RI, IResourceCollection<RI>> {
   merge?: boolean;
 }
 
-export type ShowOptions<RI> = MethodOptions<RI, RI>;
+export type ShowOptions<RI> = {
+  query?: Record<string, string>;
+  store?: (resource: IResource<RI>, response: HTTPResponse<R>) => void;
+};
 
-export type StoreOptions<RI> = MethodOptions<RI, RI>;
+export type StoreOptions<RI> = {
+  query?: Record<string, string>;
+  store?: (resource: IResource<RI>, response: HTTPResponse<R>) => void;
+};
 
-export type UpdateOptions<RI> = MethodOptions<RI, RI>;
+export type UpdateOptions<RI> = {
+  query?: Record<string, string>;
+  store?: (resource: IResource<RI>, response: HTTPResponse<R>) => void;
+};
 
-export interface DestroyOptions<RI> extends MethodOptions<RI, never> {
+export interface DestroyOptions<RI> {
+  query?: Record<string, string>;
   store?: (resource: IResource<RI>) => void;
 }
 
-export declare class BaseModel<
-  RI extends IResourceItem = IResourceItem
-> extends CoreModel {
-  private $resource: IResource<RI>;
+export declare class BaseModel<RI> extends CoreModel {
+  public $pk: string;
 
-  private $httpClient: IHTTPClient;
+  constructor(public $resourceName: string, public $restate: Restate);
 
-  private $pk: string;
-
-  constructor(private $resourceName: string, private $restate: Restate);
-
-  public async index(
-    options?: IndexOptions<RI>
-  ): Promise<IResourceCollection<RI>>;
+  public async index(options?: IndexOptions<RI>): Promise<RI[]>;
 
   public async show(
     id: IPK,
@@ -68,13 +56,13 @@ export declare class BaseModel<
   ): Promise<RI | undefined>;
 
   public async store(
-    data: Partial<RI>,
+    data: Record<string, Partial<RI>>,
     options?: StoreOptions<RI>
   ): Promise<boolean>;
 
   public async update(
     id: IPK,
-    data: Partial<RI>,
+    data: Record<string, Partial<RI>>,
     options?: UpdateOptions<RI>
   ): Promise<boolean>;
 
