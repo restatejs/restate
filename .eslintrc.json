@@ -66,10 +66,7 @@
     ],
     "prettier/prettier": "error",
     "no-use-before-define": "off",
-    "no-param-reassign": "off",
-    "no-explicit-any": {
-      "ignoreRestArgs": false
-    }
+    "no-param-reassign": "off"
   },
   "settings": {
     "import/resolver": {

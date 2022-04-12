@@ -1,4 +1,4 @@
-import { IPK, IResource, IResourceItem } from "types";
+import { IPK, IResource } from "types";
 
 import { Restate, CoreModel } from "@/index";
 
@@ -6,16 +6,14 @@ export interface HTTPConfig {
   url: string;
 }
 
-export interface HTTPResponse<R extends Object | []> {
+export interface HTTPResponse<R> {
   data: R;
   meta: Record<string, unknown>;
 }
 
 export type HTTPResponseItem<RI> = HTTPResponse<RI>;
 
-export type HTTPResponseCollection<RI> = HTTPResponse<
-  RI[]
->;
+export type HTTPResponseCollection<RI> = HTTPResponse<RI[]>;
 
 export interface IndexOptions<RI> {
   query?: Record<string, string>;

@@ -38,7 +38,6 @@ class BaseModel<RI> extends CoreModel<RI> {
         this.$resource.clear();
       }
 
-
       data.forEach((item: any) => this.$resource.set(item[this.$pk], item));
     } else {
       options.store(this.$resource, response);

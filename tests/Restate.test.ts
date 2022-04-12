@@ -8,7 +8,7 @@ const store = {} as IStore;
 
 const restate = new Restate(httpClient, store);
 
-const usersModel = {} as BaseModel<{}>;
+const usersModel = {} as BaseModel<any>;
 
 const $models = Reflect.get(restate, "$models") as Restate["$models"];
 
