@@ -9,7 +9,7 @@
     "dev": "ts-node-dev --transpile-only --ignore-watch node_modules --respawn src/index.ts",
     "lint": "eslint . --ext=.ts --fix",
     "test": "jest",
-    "publish": "npm publish --access public",
+    "publish": "npm publish --access public"
   },
   "types": "types/index.d.ts",
   "peerDependencies": {
