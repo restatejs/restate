@@ -44,6 +44,7 @@
         "groups": [
           "/^types$/",
           "module",
+          "/^@\//",
           [
             "parent",
             "sibling",
@@ -66,7 +67,8 @@
     ],
     "prettier/prettier": "error",
     "no-use-before-define": "off",
-    "no-param-reassign": "off"
+    "no-param-reassign": "off",
+    "no-non-null-assertion": "off"
   },
   "settings": {
     "import/resolver": {

@@ -1,9 +1,5 @@
-import { Restate } from "./Restate";
+import { Restate } from "./main/Restate";
 
-export * from "./Restate";
-export * from "./HttpClient";
-export * from "./Store";
-export * from "./CoreModel";
-export * from "./BaseModel";
+export * from "./main";
 
 export default Restate;

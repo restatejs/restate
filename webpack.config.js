@@ -1,9 +1,15 @@
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
   mode: 'production',
-  entry: './src/index.ts',
+  target: 'web',
+  entry: {
+    main: './src/index.ts',
+    vue: './src/plugins/vue/index.ts'
+  },
   devtool: 'source-map',
   module: {
     rules: [
@@ -15,17 +21,19 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: ['.ts'],
+    extensions: ['.ts', '.js'],
+    plugins: [new TsconfigPathsPlugin()]
   },
   output: {
-    filename: 'restate.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
     library: {
-      name: 'restate',
+      name: ['Restate', '[name]'],
       type: 'umd',
     },
     globalObject: 'this',
   },
+  externals: [nodeExternals()],
   optimization: {
     minimizer: [new TerserPlugin({
       terserOptions: {

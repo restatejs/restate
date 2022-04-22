@@ -5,6 +5,6 @@ export type IHTTPClienteRequestBody =
 export interface IHTTPClient {
   get<R>(url: string): Promise<R>;
   post<R>(url: string, body: IHTTPClienteRequestBody): Promise<R>;
-  put<R>(url: string, body: IHTTPClienteRequestBody): Promise<R>;
-  delete<R>(url: string): Promise<R>;
+  put(url: string, body: IHTTPClienteRequestBody): void;
+  delete(url: string): void;
 }

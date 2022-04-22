@@ -3,11 +3,11 @@ import { IHTTPClient, IResource } from "types";
 import Restate from "..";
 
 class CoreModel<RI = any> {
-  protected $resource: IResource<RI>;
+  public $resource: IResource<RI>;
 
-  protected $httpClient: IHTTPClient;
+  public $httpClient: IHTTPClient;
 
-  constructor(protected $resourceName: string, protected $restate: Restate) {
+  constructor(public $resourceName: string, public $restate: Restate) {
     if ($restate.has($resourceName)) {
       throw new Error(
         `RESTATE ERROR: there is already a Model that the resource name is '${$resourceName}'`
