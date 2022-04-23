@@ -12,10 +12,10 @@ describe("CoreModel", () => {
     expect(restate.get("users")).toBe(undefined);
     expect(restate.store.get("users")).toBe(undefined);
 
-    const UsersModel = new CoreModel("users", restate);
+    const UsersModel = new CoreModel("users");
 
     expect(restate.get("users")).toBe(UsersModel);
     expect(restate.store.get("users")).toBeInstanceOf(VueStoreResource);
-    expect(() => new CoreModel("users", restate)).toThrow();
+    expect(() => new CoreModel("users")).toThrow();
   });
 });

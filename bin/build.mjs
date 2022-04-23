@@ -28,8 +28,9 @@ await promiseAllMap(dirsClean, async (path) => {
 await execPromise("yarn webpack");
 
 // COPIES
+await cp(distPath, packagePath, { recursive: true });
+
 const copies = {
-  [distPath]: packagePath,
   [`${rootPath}/package.json`]: `${packagePath}/package.json`,
   [`${rootPath}/LICENSE`]: `${packagePath}/LICENSE`,
 };
@@ -49,4 +50,4 @@ await promiseAllMap(Object.entries(copies), async ([source, destination]) => {
 await rm(distPath, { recursive: true });
 
 // NPM
-await execPromise("cd package && npm pkg delete scripts private");
+await execPromise("cd package && npm pkg delete scripts");

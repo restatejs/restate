@@ -1,1 +1,1 @@
-export * from "./VuePlugin";
+export * from "./useRestate";

@@ -7,8 +7,6 @@ import type {
 } from "types/models/BaseModel";
 import type { IPK } from "types/Restate";
 
-import type Restate from "..";
-
 import { CoreModel } from "./CoreModel";
 
 function createURL(
@@ -38,8 +36,8 @@ function createURL(
 class BaseModel<RI> extends CoreModel<RI> {
   public $pk = "id";
 
-  constructor(public $resourceName: string, public $restate: Restate) {
-    super($resourceName, $restate);
+  constructor(public $resourceName: string) {
+    super($resourceName);
   }
 
   public async index(options?: IndexOptions): Promise<RI[]> {

@@ -14,7 +14,7 @@ export function useRestate<RI = any>(resourceName: string): BaseModel<RI> {
   let model = restate.get(resourceName) as BaseModel<RI>;
 
   if (!model) {
-    model = new BaseModel(resourceName, restate);
+    model = new BaseModel(resourceName);
 
     restate.set(resourceName, model);
   }

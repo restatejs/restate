@@ -1,9 +1,8 @@
 {
   "name": "@restatejs/restate",
-  "version": "1.0.0-alpha.5.2",
+  "version": "1.0.0-alpha.6",
   "author": "Everton Andrade <everton@andrade.mat.br>",
   "license": "MIT",
-  "private": "true",
   "main": "index.js",
   "types": "index.d.ts",
   "repository": {

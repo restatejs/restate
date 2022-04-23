@@ -1,11 +1,13 @@
-import type { IHTTPClient, IResource } from "types";
+import type { Restate, IHTTPClient, IResource } from "..";
 
-import type { Restate } from "@/Restate";
-
-export declare class CoreModel<RI> {
+export declare class CoreModel<RI = any> {
   public $resource: IResource<RI>;
 
   public $httpClient: IHTTPClient;
 
-  constructor(public $resourceName: string, public $restate: Restate);
+  public $resourceName: string;
+
+  constructor($resourceName: string);
+
+  public get $restate(): Restate;
 }

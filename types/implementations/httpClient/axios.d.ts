@@ -1,6 +1,6 @@
-import type { IHTTPClient, IHTTPClienteRequestBody } from "types";
-
 import type { Axios } from "axios";
+
+import type { IHTTPClient, IHTTPClienteRequestBody } from "../..";
 
 export declare class AxiosHTTPClient implements IHTTPClient {
   private axios: Axios;

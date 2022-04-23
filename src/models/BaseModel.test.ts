@@ -3,9 +3,10 @@ import axios from "axios";
 import { AxiosHTTPClient } from "@/implementations/httpClient/axios/AxiosHttpClient";
 import { VueStore } from "@/implementations/store/vue/VueStore";
 import { VueStoreResource } from "@/implementations/store/vue/VueStoreResource";
-import { Restate } from "@/Restate";
 
 import { BaseModel } from "./BaseModel";
+
+import { createRestate } from "..";
 
 const camila = {
   id: 1,
@@ -27,11 +28,11 @@ jest.mock("axios");
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-const axiosHTTPClient = new AxiosHTTPClient(mockedAxios);
+const httpClient = new AxiosHTTPClient(mockedAxios);
 
-const vueStore = new VueStore();
+const store = new VueStore();
 
-const restate = new Restate(axiosHTTPClient, vueStore);
+const restate = createRestate({ httpClient, store });
 
 let UsersModel: BaseModel<{
   id: number;
@@ -45,11 +46,11 @@ describe("BaseModel", () => {
     expect(restate.get("users")).toBe(undefined);
     expect(restate.store.get("users")).toBe(undefined);
 
-    UsersModel = new BaseModel("users", restate);
+    UsersModel = new BaseModel("users");
 
     expect(restate.get("users")).toBe(UsersModel);
     expect(restate.store.get("users")).toBeInstanceOf(VueStoreResource);
-    expect(() => new BaseModel("users", restate)).toThrow();
+    expect(() => new BaseModel("users")).toThrow();
   });
 
   test("index", async () => {

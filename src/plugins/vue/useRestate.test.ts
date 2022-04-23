@@ -3,7 +3,7 @@ import { BaseModel } from "@/models/BaseModel";
 import { Restate } from "@/Restate";
 
 import { provider } from "./provider";
-import { useRestate } from "./VuePlugin";
+import { useRestate } from "./useRestate";
 
 describe("VuePlugin", () => {
   test("useRestate", () => {
