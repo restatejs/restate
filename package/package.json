@@ -1,18 +1,13 @@
 {
   "name": "@restatejs/restate",
-  "version": "1.0.0-alpha.5",
+  "version": "1.0.0-alpha.5.2",
   "author": "Everton Andrade <everton@andrade.mat.br>",
   "license": "MIT",
+  "main": "index.js",
+  "types": "index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/restatejs/restate"
-  },
-  "scripts": {
-    "build": "node ./bin/build.mjs",
-    "dev": "ts-node-dev --transpile-only --ignore-watch node_modules --respawn src/index.ts",
-    "lint": "eslint . --ext=.ts --fix",
-    "test": "jest",
-    "publish": "npm publish package --access public"
   },
   "peerDependencies": {
     "axios": "0.26.1",

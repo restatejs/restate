@@ -36,16 +36,17 @@ const copies = {
 
 const typesFiles = await getFiles(typesPath);
 
-console.log(copies);
-
 typesFiles.forEach((file) => {
   copies[file] = file.replace("\\types\\", "\\package\\");
 });
 
 await promiseAllMap(Object.entries(copies), async ([source, destination]) => {
   await cp(source, destination, { recursive: true });
-  console.log(`COPY ${source} TO ${destination}`);
+  console.log(`COPY ${path.normalize(source.replace(rootPath, ""))}`);
 });
 
 // REMOVE DIST
 await rm(distPath, { recursive: true });
+
+// NPM
+await execPromise("cd package && npm pkg delete scripts private");
