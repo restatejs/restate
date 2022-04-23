@@ -8,23 +8,23 @@
       "import": "./dist/index.js",
       "types": "./types/index.d.ts"
     },
-    "./implementations/httpClient/axios.js": {
+    "./implementations/httpClient/axios": {
       "import": "./dist/implementations/httpClient/axios.js",
       "types": "./types/implementations/httpClient/axios.d.ts"
     },
-    "./implementations/store/vue.js": {
+    "./implementations/store/vue": {
       "import": "./dist/implementations/store/vue.js",
       "types": "./types/implementations/store/vue.d.ts"
     },
-    "./models/CoreModel.js": {
+    "./models/CoreModel": {
       "import": "./dist/models/CoreModel.js",
       "types": "./types/models/CoreModel.d.ts"
     },
-    "./models/BaseModel.js": {
+    "./models/BaseModel": {
       "import": "./dist/models/BaseModel.js",
       "types": "./types/models/BaseModel.d.ts"
     },
-    "./plugins/vue.js": {
+    "./plugins/vue": {
       "import": "./dist/plugins/vue.js",
       "types": "./types/plugins/vue.d.ts"
     }
