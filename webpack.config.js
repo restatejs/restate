@@ -31,7 +31,6 @@ module.exports = {
       dependOn: ['index', 'axiosHTTPClient', 'vueStore', 'baseModel']
     }
   },
-  devtool: 'source-map',
   module: {
     rules: [
       {
