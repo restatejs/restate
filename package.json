@@ -1,9 +1,44 @@
 {
   "name": "@restatejs/restate",
-  "version": "1.0.0-alpha.3",
-  "main": "dist/main.js",
+  "version": "1.0.0-alpha.4",
+  "main": "dist/index.js",
+  "types": "types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./types/index.d.ts"
+    },
+    "./implementations/httpClient/axios.js": {
+      "import": "./dist/implementations/httpClient/axios.js",
+      "types": "./types/implementations/httpClient/axios.d.ts"
+    },
+    "./implementations/store/vue.js": {
+      "import": "./dist/implementations/store/vue.js",
+      "types": "./types/implementations/store/vue.d.ts"
+    },
+    "./models/CoreModel.js": {
+      "import": "./dist/models/CoreModel.js",
+      "types": "./types/models/CoreModel.d.ts"
+    },
+    "./models/BaseModel.js": {
+      "import": "./dist/models/BaseModel.js",
+      "types": "./types/models/BaseModel.d.ts"
+    },
+    "./plugins/vue.js": {
+      "import": "./dist/plugins/vue.js",
+      "types": "./types/plugins/vue.d.ts"
+    }
+  },
   "author": "Everton Andrade <everton@andrade.mat.br>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/restatejs/restate"
+  },
+  "files": [
+    "types",
+    "dist"
+  ],
   "scripts": {
     "build": "rimraf dist && webpack",
     "dev": "ts-node-dev --transpile-only --ignore-watch node_modules --respawn src/index.ts",
@@ -11,7 +46,6 @@
     "test": "jest",
     "publish": "npm publish --access public"
   },
-  "types": "types/index.d.ts",
   "peerDependencies": {
     "axios": "0.26.1",
     "vue": "^3.2.31"
@@ -42,7 +76,7 @@
     "ts-loader": "^9.2.6",
     "ts-node-dev": "^1.1.8",
     "tsconfig-paths-webpack-plugin": "^3.5.2",
-    "typescript": "^4.5.4",
+    "typescript": "^4.6.3",
     "vue": "^3.2.31",
     "webpack": "^5.65.0",
     "webpack-cli": "^4.9.1",

@@ -1,6 +1,6 @@
-import { IHTTPClient, IHTTPClienteRequestBody } from "types";
+import type { IHTTPClient, IHTTPClienteRequestBody } from "types";
 
-import { Axios } from "axios";
+import type { Axios } from "axios";
 
 class AxiosHTTPClient implements IHTTPClient {
   constructor(private axios: Axios) {}

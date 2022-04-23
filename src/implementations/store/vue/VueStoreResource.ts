@@ -1,4 +1,8 @@
-import { ResourceState, RestateStore, IPK, IResource } from "types";
+import type { IPK, IResource } from "types";
+import type {
+  ResourceState,
+  RestateStore,
+} from "types/implementations/store/vue";
 
 class VueStoreResource<RI extends object> implements IResource<RI> {
   private state: ResourceState<RI>;

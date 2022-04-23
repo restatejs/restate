@@ -1,4 +1,5 @@
-import { RestateStore, IStore } from "types";
+import type { IStore } from "types";
+import type { RestateStore } from "types/implementations/store/vue";
 
 import { reactive } from "vue";
 

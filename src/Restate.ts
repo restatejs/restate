@@ -1,6 +1,6 @@
-import { IStore, IHTTPClient } from "types";
+import type { IStore, IHTTPClient } from "types";
 
-import { CoreModel } from "./models/CoreModel";
+import type { CoreModel } from "./models/CoreModel";
 
 class Restate {
   private $models: Map<string, CoreModel> = new Map();

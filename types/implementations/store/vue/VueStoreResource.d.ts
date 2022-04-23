@@ -1,6 +1,6 @@
-import { IPK, IResource, IResourceItem } from "types";
+import type { IPK, IResource, IResourceItem } from "types";
 
-import { ResourceState, RestateStore } from "./VueStore";
+import type { ResourceState, RestateStore } from "./VueStore";
 
 export declare class VueStoreResource<RI extends IResourceItem>
   implements IResource<RI>

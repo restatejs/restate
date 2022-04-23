@@ -1,6 +1,6 @@
-import { IHTTPClient, IResource } from "types";
+import type { IHTTPClient, IResource } from "types";
 
-import Restate from "..";
+import type Restate from "..";
 
 class CoreModel<RI = any> {
   public $resource: IResource<RI>;

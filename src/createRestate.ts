@@ -1,4 +1,4 @@
-import { IStore, IHTTPClient } from "types";
+import type { IStore, IHTTPClient } from "types";
 
 import { Restate } from "@/Restate";
 

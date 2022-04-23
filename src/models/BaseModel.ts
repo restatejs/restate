@@ -1,13 +1,13 @@
-import {
+import type {
   IndexOptions,
-  IPK,
   ShowOptions,
   StoreOptions,
   UpdateOptions,
   DestroyOptions,
-} from "types";
+} from "types/models/BaseModel";
+import type { IPK } from "types/Restate";
 
-import Restate from "..";
+import type Restate from "..";
 
 import { CoreModel } from "./CoreModel";
 

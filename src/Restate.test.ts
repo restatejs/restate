@@ -1,4 +1,5 @@
-import { BaseModel, IHTTPClient, IStore } from "types";
+import type { IHTTPClient, IStore } from "types";
+import type { BaseModel } from "types/models/BaseModel";
 
 import { Restate } from "@/Restate";
 

@@ -1,6 +1,6 @@
-import { IStore } from "types";
+import type { IStore } from "types";
 
-import { VueStoreResource } from "./VueStoreResource";
+import type { VueStoreResource } from "./VueStoreResource";
 
 export * from "./VueStoreResource";
 

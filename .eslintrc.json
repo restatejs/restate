@@ -38,11 +38,11 @@
       }
     ],
     "import-helpers/order-imports": [
-      "warn",
+      "error",
       {
         "newlinesBetween": "always",
         "groups": [
-          "/^types$/",
+          "/^types(\/.*)?/",
           "module",
           "/^@\//",
           [
@@ -68,7 +68,8 @@
     "prettier/prettier": "error",
     "no-use-before-define": "off",
     "no-param-reassign": "off",
-    "no-non-null-assertion": "off"
+    "no-non-null-assertion": "off",
+    "@typescript-eslint/consistent-type-imports": "error"
   },
   "settings": {
     "import/resolver": {

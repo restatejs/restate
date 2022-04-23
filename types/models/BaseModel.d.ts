@@ -1,6 +1,7 @@
-import { IPK } from "types";
+import type { IPK } from "types";
 
-import { Restate, CoreModel } from "@/index";
+import type { Restate } from "@/index";
+import { CoreModel } from "@/models/CoreModel";
 
 export interface HTTPConfig {
   url: string;

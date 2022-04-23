@@ -1,5 +1,6 @@
-import { Restate } from "./main/Restate";
+import { Restate } from "./Restate";
 
-export * from "./main";
+export * from "./Restate";
+export * from "./createRestate";
 
 export default Restate;

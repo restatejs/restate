@@ -1,6 +1,6 @@
 import { $restate, createRestate } from "@/createRestate";
 import { BaseModel } from "@/models/BaseModel";
-import { Restate } from "@/Restate";
+import type { Restate } from "@/Restate";
 
 import { provider } from "./provider";
 

@@ -7,8 +7,29 @@ module.exports = {
   mode: 'production',
   target: 'web',
   entry: {
-    main: './src/index.ts',
-    vue: './src/plugins/vue/index.ts'
+    index: './src/index.ts',
+    axiosHTTPClient: {
+      import: './src/implementations/httpClient/axios/index.ts',
+      filename: 'implementations/httpClient/axios.js'
+    },
+    vueStore: {
+      import: './src/implementations/store/vue/index.ts',
+      filename: 'implementations/store/vue.js'
+    },
+    coreModel: {
+      import: './src/models/CoreModel.ts',
+      filename: 'models/CoreModel.js'
+    },
+    baseModel: {
+      import: './src/models/BaseModel.ts',
+      filename: 'models/BaseModel.js',
+      dependOn: 'coreModel'
+    },
+    vue: {
+      import: './src/plugins/vue/index.ts',
+      filename: 'plugins/vue.js',
+      dependOn: ['index', 'axiosHTTPClient', 'vueStore', 'baseModel']
+    }
   },
   devtool: 'source-map',
   module: {
