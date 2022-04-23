@@ -1,6 +1,6 @@
 {
   "name": "@restatejs/restate",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.4.1",
   "main": "dist/index.js",
   "types": "types/index.d.ts",
   "exports": {
