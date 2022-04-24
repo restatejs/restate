@@ -50,4 +50,4 @@ await promiseAllMap(Object.entries(copies), async ([source, destination]) => {
 await rm(distPath, { recursive: true });
 
 // NPM
-await execPromise("cd package && npm pkg delete scripts");
+await execPromise("cd package && npm pkg delete scripts private");
