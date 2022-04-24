@@ -1,3 +1,4 @@
+import type { IPK } from "types";
 import type {
   IndexOptions,
   ShowOptions,
@@ -5,7 +6,6 @@ import type {
   UpdateOptions,
   DestroyOptions,
 } from "types/models/BaseModel";
-import type { IPK } from "types/Restate";
 
 import { CoreModel } from "./CoreModel";
 

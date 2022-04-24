@@ -4,7 +4,7 @@ import type Restate from "..";
 
 import { $restate } from "..";
 
-class CoreModel<RI = any> {
+class CoreModel<RI> {
   public $resource: IResource<RI>;
 
   public $httpClient: IHTTPClient;

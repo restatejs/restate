@@ -1,6 +1,6 @@
-import type { IPK } from "types";
+import { CoreModel } from "./CoreModel";
 
-import { CoreModel } from "@/models/CoreModel";
+import type { IPK } from "..";
 
 export interface HTTPConfig {
   url: string;

@@ -1,6 +1,4 @@
-import type { IStore, IHTTPClient } from "types";
-
-import type { CoreModel } from "@/index";
+import type { CoreModel } from "./models/CoreModel";
 
 export type IHTTPClienteRequestBody =
   | Record<string, unknown>
@@ -34,15 +32,15 @@ export interface IStore<RE extends IResource = IResource> {
 }
 
 declare class Restate {
-  private $models: Map<string, CoreModel>;
+  private $models: Map<string, CoreModel<unknown>>;
 
   constructor(public httpClient: IHTTPClient, public store: IStore);
 
-  public get(resourceName: string): CoreModel | undefined;
+  public get(resourceName: string): CoreModel<unknown> | undefined;
 
-  public entries(): IterableIterator<[string, CoreModel]>;
+  public entries(): IterableIterator<[string, CoreModel<unknown>]>;
 
-  public set(resourceName: string, model: CoreModel): this;
+  public set(resourceName: string, model: CoreModel<unknown>): this;
 
   public has(resourceName: string): boolean;
 

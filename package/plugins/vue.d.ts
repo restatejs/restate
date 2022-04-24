@@ -1,3 +1,3 @@
-import type { BaseModel } from "../index";
+import type { BaseModel } from "../models/BaseModel";
 
-export declare function useRestate(resourceName: string): BaseModel<any>;
+export declare function useRestate<RI>(resourceName: string): BaseModel<RI>;

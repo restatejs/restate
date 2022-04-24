@@ -1,7 +1,8 @@
 import type { IHTTPClient, IStore } from "types";
-import type { BaseModel } from "types/models/BaseModel";
 
 import { Restate } from "@/Restate";
+
+import type { BaseModel } from "./models/BaseModel";
 
 const httpClient = {} as IHTTPClient;
 
@@ -9,7 +10,7 @@ const store = {} as IStore;
 
 const restate = new Restate(httpClient, store);
 
-const usersModel = {} as BaseModel<any>;
+const usersModel = {} as BaseModel<unknown>;
 
 const $models = Reflect.get(restate, "$models") as Restate["$models"];
 

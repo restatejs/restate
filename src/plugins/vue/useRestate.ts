@@ -1,10 +1,10 @@
 import { $restate, createRestate } from "@/createRestate";
+import type Restate from "@/index";
 import { BaseModel } from "@/models/BaseModel";
-import type { Restate } from "@/Restate";
 
 import { provider } from "./provider";
 
-export function useRestate<RI = any>(resourceName: string): BaseModel<RI> {
+export function useRestate<RI>(resourceName: string): BaseModel<RI> {
   if (!$restate.instance) {
     createRestate(provider);
   }
