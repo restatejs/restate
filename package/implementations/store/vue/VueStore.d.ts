@@ -4,7 +4,7 @@ import type { VueStoreResource } from "./VueStoreResource";
 export * from "./VueStoreResource";
 
 export interface ResourceState<RI extends object> {
-  data: Record<string, RI | undefined>;
+  data: Record<string, Partial<RI> | undefined>;
 }
 
 export type RestateStore = Record<string, ResourceState<RI>>;
