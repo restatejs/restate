@@ -23,12 +23,10 @@ module.exports = {
     baseModel: {
       import: './src/models/BaseModel.ts',
       filename: 'models/BaseModel.js',
-      dependOn: 'coreModel'
     },
     vue: {
       import: './src/plugins/vue/index.ts',
       filename: 'plugins/vue.js',
-      dependOn: ['index', 'axiosHTTPClient', 'vueStore', 'baseModel']
     }
   },
   module: {
