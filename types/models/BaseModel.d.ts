@@ -1,7 +1,5 @@
 import { CoreModel } from "./CoreModel";
 
-import type { IPK, Restate } from "..";
-
 export interface HTTPConfig {
   url: string;
 }
@@ -27,25 +25,39 @@ export interface DestroyOptions {
   query?: Record<string, string>;
 }
 
-export declare class BaseModel<RI> extends CoreModel {
-  public $pk: string;
+export declare class BaseModel<RI> extends CoreModel<RI> {
+  public $pk = "id";
 
-  constructor(public $resourceName: string, public $restate: Restate);
+  constructor(public $resourceName: string, public $axios: Axios) {
+    super($resourceName);
+  }
 
-  public index(options?: IndexOptions): RI[];
+  public index(options?: IndexOptions): {
+    data: ComputedRef<Ref<Partial<RI>>[]>;
+    load: Promise<boolean>;
+  };
 
-  public show(id: IPK, options?: ShowOptions): Partial<RI> | undefined;
+  public show(
+    id: string | number,
+    options?: ShowOptions
+  ): {
+    data: Ref<Partial<RI> | Record<string, never>>;
+    load: Promise<boolean>;
+  };
 
   public async store(
-    data: Record<string, Partial<RI>>,
+    data: Partial<RI>,
     options?: StoreOptions
   ): Promise<boolean>;
 
   public async update(
-    id: IPK,
-    data: Record<string, Partial<RI>>,
+    id: string | number,
+    data: Partial<RI>,
     options?: UpdateOptions
   ): Promise<boolean>;
 
-  public async destroy(id: IPK, options?: DestroyOptions): Promise<boolean>;
+  public async destroy(
+    id: string | number,
+    options?: DestroyOptions
+  ): Promise<boolean>;
 }

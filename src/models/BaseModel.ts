@@ -1,4 +1,3 @@
-import type { IPK } from "types";
 import type {
   IndexOptions,
   ShowOptions,
@@ -7,7 +6,8 @@ import type {
   DestroyOptions,
 } from "types/models/BaseModel";
 
-import type Restate from "..";
+import type { Axios } from "axios";
+import type { ComputedRef, Ref } from "vue";
 
 import { CoreModel } from "./CoreModel";
 
@@ -38,42 +38,63 @@ function createURL(
 class BaseModel<RI> extends CoreModel<RI> {
   public $pk = "id";
 
-  constructor(public $resourceName: string, public $restate: Restate) {
-    super($resourceName, $restate);
+  constructor(public $resourceName: string, public $axios: Axios) {
+    super($resourceName);
   }
 
-  public index(options?: IndexOptions): RI[] {
+  public index(options?: IndexOptions): {
+    data: ComputedRef<Ref<Partial<RI>>[]>;
+    load: Promise<boolean>;
+  } {
     const url = createURL(
       "/:resourceName",
       { resourceName: this.$resourceName },
       options?.query
     );
 
-    this.$httpClient.get<RI[]>(url).then((reponseData) => {
-      if (options?.merge !== true) {
-        this.$resource.clear();
-      }
+    const load = new Promise<boolean>((resolve) => {
+      this.$axios
+        .get<RI[]>(url)
+        .then(({ data }) => {
+          if (options?.merge !== true) {
+            this.$resource.clear();
+          }
 
-      reponseData.forEach((item: any) =>
-        this.$resource.set(item[this.$pk], item)
-      );
+          data.forEach((item: any) => this.$resource.set(item[this.$pk], item));
+        })
+        .finally(() => resolve(true));
     });
 
-    return this.$resource.getAll();
+    return {
+      data: this.$resource.getAll(),
+      load,
+    };
   }
 
-  public show(id: IPK, options?: ShowOptions): Partial<RI> | undefined {
+  public show(
+    id: string | number,
+    options?: ShowOptions
+  ): {
+    data: Ref<Partial<RI> | Record<string, never>>;
+    load: Promise<boolean>;
+  } {
     const url = createURL(
       "/:resourceName/:id",
       { resourceName: this.$resourceName, id },
       options?.query
     );
 
-    this.$httpClient
-      .get<RI>(url)
-      .then((reponseData) => this.$resource.set(id, reponseData));
+    const load = new Promise<boolean>((resolve) => {
+      this.$axios
+        .get<RI>(url)
+        .then(({ data }) => this.$resource.set(id, data))
+        .finally(() => resolve(true));
+    });
 
-    return this.$resource.get(id);
+    return {
+      data: this.$resource.get(id),
+      load,
+    };
   }
 
   public async store(
@@ -86,17 +107,15 @@ class BaseModel<RI> extends CoreModel<RI> {
       options?.query
     );
 
-    await this.$httpClient
-      .post<RI>(url, data)
-      .then((reponseData) =>
-        this.$resource.set((reponseData as any)[this.$pk], reponseData)
-      );
+    await this.$axios
+      .post<Partial<RI>>(url, data)
+      .then(({ data }) => this.$resource.set((data as any)[this.$pk], data));
 
     return true;
   }
 
   public async update(
-    id: IPK,
+    id: string | number,
     data: Partial<RI>,
     options?: UpdateOptions
   ): Promise<boolean> {
@@ -106,23 +125,26 @@ class BaseModel<RI> extends CoreModel<RI> {
       options?.query
     );
 
-    await this.$httpClient.put(url, data);
+    await this.$axios.put(url, data);
 
     Object.entries(data).forEach(([key, val]) =>
-      this.$resource.setProperty(id, key, val)
+      this.$resource.setProperty(id, key, val as string | number)
     );
 
     return true;
   }
 
-  public async destroy(id: IPK, options?: DestroyOptions): Promise<boolean> {
+  public async destroy(
+    id: string | number,
+    options?: DestroyOptions
+  ): Promise<boolean> {
     const url = createURL(
       "/:resourceName/:id",
       { resourceName: this.$resourceName, id },
       options?.query
     );
 
-    await this.$httpClient.delete(url);
+    await this.$axios.delete(url);
 
     this.$resource.delete(id);
 
