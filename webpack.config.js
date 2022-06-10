@@ -8,14 +8,6 @@ module.exports = {
   target: 'web',
   entry: {
     index: './src/index.ts',
-    axiosHTTPClient: {
-      import: './src/implementations/httpClient/axios/index.ts',
-      filename: 'implementations/httpClient/axios.js'
-    },
-    vueStore: {
-      import: './src/implementations/store/vue/index.ts',
-      filename: 'implementations/store/vue.js'
-    },
     coreModel: {
       import: './src/models/CoreModel.ts',
       filename: 'models/CoreModel.js'
@@ -24,10 +16,6 @@ module.exports = {
       import: './src/models/BaseModel.ts',
       filename: 'models/BaseModel.js',
     },
-    vue: {
-      import: './src/plugins/vue/index.ts',
-      filename: 'plugins/vue.js',
-    }
   },
   module: {
     rules: [

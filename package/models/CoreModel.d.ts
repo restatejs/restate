@@ -1,9 +1,9 @@
-import type { Restate, IHTTPClient, IResource } from "..";
+import type { Resource } from "..";
 
-export declare class CoreModel<RI> {
-  public $resource: IResource<RI>;
+class CoreModel<RI> {
+  public $resource: Resource<RI>;
 
-  public $httpClient: IHTTPClient;
-
-  constructor(public $resourceName: string, public $restate: Restate);
+  constructor(public $resourceName: string);
 }
+
+export { CoreModel };
