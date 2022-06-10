@@ -1,6 +1,6 @@
 import { CoreModel } from "./CoreModel";
 
-import type { IPK } from "..";
+import type { IPK, Restate } from "..";
 
 export interface HTTPConfig {
   url: string;
@@ -30,7 +30,7 @@ export interface DestroyOptions {
 export declare class BaseModel<RI> extends CoreModel {
   public $pk: string;
 
-  constructor(public $resourceName: string);
+  constructor(public $resourceName: string, public $restate: Restate);
 
   public async index(options?: IndexOptions): Promise<RI[]>;
 

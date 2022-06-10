@@ -1,25 +1,20 @@
-import { createRestate } from "@/createRestate";
 import { BaseModel } from "@/models/BaseModel";
 import { Restate } from "@/Restate";
 
-import { provider } from "./provider";
 import { useRestate } from "./useRestate";
 
 describe("VuePlugin", () => {
   test("useRestate", () => {
     const resourceName = "users;";
-    const restate = createRestate(provider);
 
-    expect(restate instanceof Restate).toBe(true);
+    expect(window.restate).toBe(undefined);
 
-    let users = restate.get(resourceName);
+    const users = useRestate(resourceName);
 
-    expect(users).toBe(undefined);
-
-    users = useRestate(resourceName);
+    expect(window.restate).toBeInstanceOf(Restate);
 
     expect(users).toBeInstanceOf(BaseModel);
 
-    expect(restate.get(resourceName)).toBe(users);
+    expect(window.restate.get(resourceName)).toBe(users);
   });
 });

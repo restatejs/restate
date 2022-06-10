@@ -6,7 +6,7 @@ import { VueStoreResource } from "@/implementations/store/vue/VueStoreResource";
 
 import { BaseModel } from "./BaseModel";
 
-import { createRestate } from "..";
+import Restate from "..";
 
 const camila = {
   id: 1,
@@ -32,7 +32,7 @@ const httpClient = new AxiosHTTPClient(mockedAxios);
 
 const store = new VueStore();
 
-const restate = createRestate({ httpClient, store });
+const restate = new Restate(httpClient, store);
 
 let UsersModel: BaseModel<{
   id: number;
@@ -46,11 +46,11 @@ describe("BaseModel", () => {
     expect(restate.get("users")).toBe(undefined);
     expect(restate.store.get("users")).toBe(undefined);
 
-    UsersModel = new BaseModel("users");
+    UsersModel = new BaseModel("users", restate);
 
     expect(restate.get("users")).toBe(UsersModel);
     expect(restate.store.get("users")).toBeInstanceOf(VueStoreResource);
-    expect(() => new BaseModel("users")).toThrow();
+    expect(() => new BaseModel("users", restate)).toThrow();
   });
 
   test("index", async () => {

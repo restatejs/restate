@@ -5,9 +5,5 @@ export declare class CoreModel<RI> {
 
   public $httpClient: IHTTPClient;
 
-  public $resourceName: string;
-
-  constructor($resourceName: string);
-
-  public get $restate(): Restate;
+  constructor(public $resourceName: string, public $restate: Restate);
 }

@@ -1,20 +1,25 @@
-import { $restate, createRestate } from "@/createRestate";
-import type Restate from "@/index";
+import Restate from "@/index";
 import { BaseModel } from "@/models/BaseModel";
 
 import { provider } from "./provider";
 
+declare global {
+  interface Window {
+    restate: Restate;
+  }
+}
+
 export function useRestate<RI>(resourceName: string): BaseModel<RI> {
-  if (!$restate.instance) {
-    createRestate(provider);
+  if (!window.restate) {
+    window.restate = new Restate(provider.httpClient, provider.store);
   }
 
-  const restate = $restate.instance as Restate;
+  const { restate } = window;
 
   let model = restate.get(resourceName) as BaseModel<RI>;
 
   if (!model) {
-    model = new BaseModel(resourceName);
+    model = new BaseModel(resourceName, restate);
 
     restate.set(resourceName, model);
   }

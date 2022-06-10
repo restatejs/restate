@@ -7,6 +7,8 @@ import type {
   DestroyOptions,
 } from "types/models/BaseModel";
 
+import type Restate from "..";
+
 import { CoreModel } from "./CoreModel";
 
 function createURL(
@@ -36,8 +38,8 @@ function createURL(
 class BaseModel<RI> extends CoreModel<RI> {
   public $pk = "id";
 
-  constructor(public $resourceName: string) {
-    super($resourceName);
+  constructor(public $resourceName: string, public $restate: Restate) {
+    super($resourceName, $restate);
   }
 
   public async index(options?: IndexOptions): Promise<RI[]> {
