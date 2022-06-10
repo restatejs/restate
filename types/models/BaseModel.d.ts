@@ -32,9 +32,9 @@ export declare class BaseModel<RI> extends CoreModel {
 
   constructor(public $resourceName: string, public $restate: Restate);
 
-  public async index(options?: IndexOptions): Promise<RI[]>;
+  public index(options?: IndexOptions): RI[];
 
-  public async show(id: IPK, options?: ShowOptions): Promise<RI | undefined>;
+  public show(id: IPK, options?: ShowOptions): Partial<RI> | undefined;
 
   public async store(
     data: Record<string, Partial<RI>>,

@@ -42,36 +42,36 @@ class BaseModel<RI> extends CoreModel<RI> {
     super($resourceName, $restate);
   }
 
-  public async index(options?: IndexOptions): Promise<RI[]> {
+  public index(options?: IndexOptions): RI[] {
     const url = createURL(
       "/:resourceName",
       { resourceName: this.$resourceName },
       options?.query
     );
 
-    const reponseData = await this.$httpClient.get<RI[]>(url);
+    this.$httpClient.get<RI[]>(url).then((reponseData) => {
+      if (options?.merge !== true) {
+        this.$resource.clear();
+      }
 
-    if (options?.merge !== true) {
-      this.$resource.clear();
-    }
-
-    reponseData.forEach((item: any) =>
-      this.$resource.set(item[this.$pk], item)
-    );
+      reponseData.forEach((item: any) =>
+        this.$resource.set(item[this.$pk], item)
+      );
+    });
 
     return this.$resource.getAll();
   }
 
-  public async show(id: IPK, options?: ShowOptions): Promise<RI | undefined> {
+  public show(id: IPK, options?: ShowOptions): Partial<RI> | undefined {
     const url = createURL(
       "/:resourceName/:id",
       { resourceName: this.$resourceName, id },
       options?.query
     );
 
-    const reponseData = await this.$httpClient.get<RI>(url);
-
-    this.$resource.set((reponseData as any)[this.$pk], reponseData);
+    this.$httpClient
+      .get<RI>(url)
+      .then((reponseData) => this.$resource.set(id, reponseData));
 
     return this.$resource.get(id);
   }
@@ -86,9 +86,11 @@ class BaseModel<RI> extends CoreModel<RI> {
       options?.query
     );
 
-    const reponseData = await this.$httpClient.post<RI>(url, data);
-
-    this.$resource.set((reponseData as any)[this.$pk], reponseData);
+    await this.$httpClient
+      .post<RI>(url, data)
+      .then((reponseData) =>
+        this.$resource.set((reponseData as any)[this.$pk], reponseData)
+      );
 
     return true;
   }
