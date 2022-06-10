@@ -14,7 +14,7 @@ export interface IHTTPClient {
 export type IPK = string | number;
 
 export interface IResource<RI> {
-  get(id: PK): RI | undefined;
+  get(id: PK): Partial<RI> | undefined;
   getAll(): RI[];
   set(id: PK, data: RI): this;
   setProperty(id: PK, prop: string, value: unknown): this;

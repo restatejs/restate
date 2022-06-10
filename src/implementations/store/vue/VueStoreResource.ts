@@ -17,8 +17,12 @@ class VueStoreResource<RI extends object> implements IResource<RI> {
     this.state = store[resourceName];
   }
 
-  get(id: IPK): RI | undefined {
-    return this.state.data[id];
+  get(id: IPK): Partial<RI> | undefined {
+    const item = this.state.data[id];
+
+    if (!item) this.state.data[id] = {};
+
+    return item;
   }
 
   getAll(): RI[] {
