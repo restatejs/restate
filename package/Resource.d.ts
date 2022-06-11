@@ -7,19 +7,23 @@ export interface ResourceState<RI> {
 class Resource<RI> {
   public state: ResourceState;
 
-  get(id: string | number): Ref<Partial<RI>>;
+  public get(id: string | number): Ref<Partial<RI>>;
 
-  getAll(): ComputedRef<Ref<Partial<RI>>[]>;
+  public getAll(): ComputedRef<Ref<Partial<RI>>[]>;
 
-  set(id: string | number, data: Partial<RI>): this;
+  public set(id: string | number, data: Partial<RI>): this;
 
-  setProperty(id: string | number, prop: string, value: string | number): this;
+  public setProperty(
+    id: string | number,
+    prop: string,
+    value: string | number
+  ): this;
 
-  has(id: string | number): boolean;
+  public has(id: string | number): boolean;
 
-  delete(id: string | number): void;
+  public delete(id: string | number): void;
 
-  clear(): void;
+  public clear(): void;
 }
 
 export { Resource };

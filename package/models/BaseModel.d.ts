@@ -32,6 +32,10 @@ export declare class BaseModel<RI> extends CoreModel<RI> {
     super($resourceName);
   }
 
+  public get collection(): ComputedRef<Ref<Partial<RI>>[]>;
+
+  public get item(): (id: string | number) => Ref<Partial<RI>>;
+
   public index(options?: IndexOptions): {
     data: ComputedRef<Ref<Partial<RI>>[]>;
     load: Promise<boolean>;
