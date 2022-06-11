@@ -42,6 +42,14 @@ class BaseModel<RI> extends CoreModel<RI> {
     super($resourceName);
   }
 
+  public get collection(): ComputedRef<Ref<Partial<RI>>[]> {
+    return this.$resource.getAll();
+  }
+
+  public get item(): (id: string | number) => Ref<Partial<RI>> {
+    return (id: string | number) => this.$resource.get(id);
+  }
+
   public index(options?: IndexOptions): {
     data: ComputedRef<Ref<Partial<RI>>[]>;
     load: Promise<boolean>;

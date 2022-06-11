@@ -32,7 +32,19 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 const UsersModel = new BaseModel<User>("users", mockedAxios);
 
 describe("BaseModel", () => {
+  test("item", async () => {
+    UsersModel.$resource.set(1, camila);
+
+    expect(UsersModel.item(1).value).toEqual(camila);
+  });
+
+  test("collection", async () => {
+    expect(UsersModel.collection.value).toEqual([camila]);
+  });
+
   test("index", async () => {
+    UsersModel.$resource.clear();
+
     mockedAxios.get.mockImplementation(() =>
       Promise.resolve({ data: usersList })
     );
