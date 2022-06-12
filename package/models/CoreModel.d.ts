@@ -1,3 +1,5 @@
+import type { Ref } from "vue";
+
 import type { Resource } from "..";
 
 export declare class CoreModel<RI> {
