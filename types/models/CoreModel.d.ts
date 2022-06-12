@@ -1,9 +1,12 @@
 import type { Resource } from "..";
 
-class CoreModel<RI> {
+export declare class CoreModel<RI> {
   public $resource: Resource<RI>;
 
   constructor(public $resourceName: string);
-}
 
-export { CoreModel };
+  public load(request: () => Promise<void>): {
+    loaded: Promise<boolean>;
+    loading: Ref<boolean>;
+  };
+}
