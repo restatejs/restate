@@ -28,17 +28,16 @@ export interface DestroyOptions {
 export declare class BaseModel<RI> extends CoreModel<RI> {
   public $pk = "id";
 
-  constructor(public $resourceName: string, public $axios: Axios) {
-    super($resourceName);
-  }
+  constructor(public $resourceName: string, public $axios: Axios);
 
-  public get collection(): ComputedRef<Ref<Partial<RI>>[]>;
+  public collection(): ComputedRef<Ref<Partial<RI>>[]>;
 
-  public get item(): (id: string | number) => Ref<Partial<RI>>;
+  public item(id: string | number): Ref<Partial<RI>>;
 
   public index(options?: IndexOptions): {
     data: ComputedRef<Ref<Partial<RI>>[]>;
-    load: Promise<boolean>;
+    loaded: Promise<boolean>;
+    loading: Ref<boolean>;
   };
 
   public show(
@@ -46,22 +45,32 @@ export declare class BaseModel<RI> extends CoreModel<RI> {
     options?: ShowOptions
   ): {
     data: Ref<Partial<RI> | Record<string, never>>;
-    load: Promise<boolean>;
+    loaded: Promise<boolean>;
+    loading: Ref<boolean>;
   };
 
-  public async store(
-    data: Partial<RI>,
+  public store(
+    payloaded: Partial<RI>,
     options?: StoreOptions
-  ): Promise<boolean>;
+  ): {
+    data: ComputedRef<Partial<RI> | null>;
+    loaded: Promise<boolean>;
+    loading: Ref<boolean>;
+  };
 
-  public async update(
+  public update(
     id: string | number,
     data: Partial<RI>,
     options?: UpdateOptions
-  ): Promise<boolean>;
-
-  public async destroy(
+  ): {
+    loaded: Promise<boolean>;
+    loading: Ref<boolean>;
+  };
+  public destroy(
     id: string | number,
     options?: DestroyOptions
-  ): Promise<boolean>;
+  ): {
+    loaded: Promise<boolean>;
+    loading: Ref<boolean>;
+  };
 }

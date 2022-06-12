@@ -8,6 +8,7 @@ import type {
 
 import type { Axios } from "axios";
 import type { ComputedRef, Ref } from "vue";
+import { computed, ref } from "vue";
 
 import { CoreModel } from "./CoreModel";
 
@@ -42,17 +43,18 @@ class BaseModel<RI> extends CoreModel<RI> {
     super($resourceName);
   }
 
-  public get collection(): ComputedRef<Ref<Partial<RI>>[]> {
+  public collection(): ComputedRef<Ref<Partial<RI>>[]> {
     return this.$resource.getAll();
   }
 
-  public get item(): (id: string | number) => Ref<Partial<RI>> {
-    return (id: string | number) => this.$resource.get(id);
+  public item(id: string | number): Ref<Partial<RI>> {
+    return this.$resource.get(id);
   }
 
   public index(options?: IndexOptions): {
     data: ComputedRef<Ref<Partial<RI>>[]>;
-    load: Promise<boolean>;
+    loaded: Promise<boolean>;
+    loading: Ref<boolean>;
   } {
     const url = createURL(
       "/:resourceName",
@@ -60,22 +62,20 @@ class BaseModel<RI> extends CoreModel<RI> {
       options?.query
     );
 
-    const load = new Promise<boolean>((resolve) => {
-      this.$axios
-        .get<RI[]>(url)
-        .then(({ data }) => {
-          if (options?.merge !== true) {
-            this.$resource.clear();
-          }
+    const { loaded, loading } = this.load(async () => {
+      const { data } = await this.$axios.get<RI[]>(url);
 
-          data.forEach((item: any) => this.$resource.set(item[this.$pk], item));
-        })
-        .finally(() => resolve(true));
+      if (options?.merge !== true) {
+        this.$resource.clear();
+      }
+
+      data.forEach((item: any) => this.$resource.set(item[this.$pk], item));
     });
 
     return {
       data: this.$resource.getAll(),
-      load,
+      loaded,
+      loading,
     };
   }
 
@@ -84,7 +84,8 @@ class BaseModel<RI> extends CoreModel<RI> {
     options?: ShowOptions
   ): {
     data: Ref<Partial<RI> | Record<string, never>>;
-    load: Promise<boolean>;
+    loaded: Promise<boolean>;
+    loading: Ref<boolean>;
   } {
     const url = createURL(
       "/:resourceName/:id",
@@ -92,71 +93,95 @@ class BaseModel<RI> extends CoreModel<RI> {
       options?.query
     );
 
-    const load = new Promise<boolean>((resolve) => {
-      this.$axios
-        .get<RI>(url)
-        .then(({ data }) => this.$resource.set(id, data))
-        .finally(() => resolve(true));
+    const { loaded, loading } = this.load(async () => {
+      const { data } = await this.$axios.get<RI>(url);
+
+      this.$resource.set(id, data);
     });
 
     return {
       data: this.$resource.get(id),
-      load,
+      loaded,
+      loading,
     };
   }
 
-  public async store(
-    data: Partial<RI>,
+  public store(
+    payloaded: Partial<RI>,
     options?: StoreOptions
-  ): Promise<boolean> {
+  ): {
+    data: ComputedRef<Partial<RI> | null>;
+    loaded: Promise<boolean>;
+    loading: Ref<boolean>;
+  } {
     const url = createURL(
       "/:resourceName",
       { resourceName: this.$resourceName },
       options?.query
     );
 
-    await this.$axios
-      .post<Partial<RI>>(url, data)
-      .then(({ data }) => this.$resource.set((data as any)[this.$pk], data));
+    const responseItemId: Ref<string | number | null> = ref(null);
 
-    return true;
+    const responseItem: ComputedRef<Partial<RI> | null> = computed(() => {
+      if (responseItemId.value === null) return null;
+
+      return this.$resource.get(responseItemId.value).value;
+    });
+
+    const { loaded, loading } = this.load(async () => {
+      const { data } = await this.$axios.post<Partial<RI>>(url, payloaded);
+
+      this.$resource.set((data as any)[this.$pk], data);
+      responseItemId.value = (data as any)[this.$pk];
+    });
+
+    return {
+      data: responseItem,
+      loaded,
+      loading,
+    };
   }
 
-  public async update(
+  public update(
     id: string | number,
     data: Partial<RI>,
     options?: UpdateOptions
-  ): Promise<boolean> {
+  ): {
+    loaded: Promise<boolean>;
+    loading: Ref<boolean>;
+  } {
     const url = createURL(
       "/:resourceName/:id",
       { resourceName: this.$resourceName, id },
       options?.query
     );
 
-    await this.$axios.put(url, data);
+    return this.load(async () => {
+      await this.$axios.put(url, data);
 
-    Object.entries(data).forEach(([key, val]) =>
-      this.$resource.setProperty(id, key, val as string | number)
-    );
-
-    return true;
+      Object.entries(data).forEach(([key, val]) =>
+        this.$resource.setProperty(id, key, val as string | number)
+      );
+    });
   }
 
-  public async destroy(
+  public destroy(
     id: string | number,
     options?: DestroyOptions
-  ): Promise<boolean> {
+  ): {
+    loaded: Promise<boolean>;
+    loading: Ref<boolean>;
+  } {
     const url = createURL(
       "/:resourceName/:id",
       { resourceName: this.$resourceName, id },
       options?.query
     );
 
-    await this.$axios.delete(url);
-
-    this.$resource.delete(id);
-
-    return true;
+    return this.load(async () => {
+      await this.$axios.delete(url);
+      this.$resource.delete(id);
+    });
   }
 }
 

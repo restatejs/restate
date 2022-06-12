@@ -39,7 +39,7 @@ describe("BaseModel", () => {
   });
 
   test("collection", async () => {
-    expect(UsersModel.collection.value).toEqual([camila]);
+    expect(UsersModel.collection().value).toEqual([camila]);
   });
 
   test("index", async () => {
@@ -51,11 +51,15 @@ describe("BaseModel", () => {
 
     expect(UsersModel.$resource.getAll().value).toEqual([]);
 
-    const { load, data } = UsersModel.index();
+    const { data, loaded, loading } = UsersModel.index();
 
     expect(data.value).toEqual([]);
 
-    await load;
+    expect(loading.value).toBe(true);
+
+    await loaded;
+
+    expect(loading.value).toBe(false);
 
     expect(UsersModel.$resource.getAll().value).toEqual(usersList);
 
@@ -69,11 +73,15 @@ describe("BaseModel", () => {
 
     expect(UsersModel.$resource.get(1).value).toEqual({});
 
-    const { load, data } = UsersModel.show(1);
+    const { data, loaded, loading } = UsersModel.show(1);
 
     expect(data.value).toEqual({});
 
-    await load;
+    expect(loading.value).toBe(true);
+
+    await loaded;
+
+    expect(loading.value).toBe(false);
 
     expect(UsersModel.$resource.get(1).value).toEqual(camila);
 
@@ -87,27 +95,46 @@ describe("BaseModel", () => {
 
     expect(UsersModel.$resource.get(2).value).toEqual({});
 
-    const stored = await UsersModel.store(deborah);
+    const { data, loaded, loading } = UsersModel.store(deborah);
 
-    expect(stored).toBe(true);
+    expect(data.value).toBe(null);
+
+    expect(loading.value).toBe(true);
+
+    await loaded;
+
+    expect(loading.value).toBe(false);
+
+    expect(data.value).toEqual(deborah);
+
     expect(UsersModel.$resource.get(2).value).toEqual(deborah);
   });
 
   test("update", async () => {
     expect(UsersModel.$resource.get(1)?.value.age).toBe(camila.age);
 
-    const updated = await UsersModel.update(camila.id, { age: 22 });
+    const { loaded, loading } = UsersModel.update(camila.id, { age: 22 });
 
-    expect(updated).toBe(true);
+    expect(loading.value).toBe(true);
+
+    await loaded;
+
+    expect(loading.value).toBe(false);
+
     expect(UsersModel.$resource.get(1)?.value.age).toBe(22);
   });
 
   test("destroy", async () => {
     expect(UsersModel.$resource.get(2).value).toEqual(deborah);
 
-    const destroyed = await UsersModel.destroy(deborah.id);
+    const { loaded, loading } = UsersModel.destroy(deborah.id);
 
-    expect(destroyed).toBe(true);
+    expect(loading.value).toBe(true);
+
+    await loaded;
+
+    expect(loading.value).toBe(false);
+
     expect(UsersModel.$resource.get(2).value).toEqual({});
   });
 });
