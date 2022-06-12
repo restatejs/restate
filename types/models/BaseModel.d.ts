@@ -1,8 +1,6 @@
-import { CoreModel } from "./CoreModel";
+import type { ComputedRef, Ref } from "vue";
 
-export interface HTTPConfig {
-  url: string;
-}
+import { CoreModel } from "./CoreModel";
 
 export interface IndexOptions {
   query?: Record<string, string>;
