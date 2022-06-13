@@ -18,8 +18,12 @@ class Resource<RI> {
     return toRef(this.state.data, id);
   }
 
-  getAll(): ComputedRef<Ref<Partial<RI>>[]> {
-    const computedCollection = computed(() => Object.values(this.state.data));
+  getAll(): ComputedRef<Partial<RI>[]> {
+    const computedCollection = computed(() => {
+      const collection = Object.values(this.state.data) as unknown;
+
+      return collection as Partial<RI>[];
+    });
 
     return computedCollection;
   }

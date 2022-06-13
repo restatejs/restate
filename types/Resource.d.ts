@@ -9,7 +9,7 @@ class Resource<RI> {
 
   public get(id: string | number): Ref<Partial<RI>>;
 
-  public getAll(): ComputedRef<Ref<Partial<RI>>[]>;
+  public getAll(): ComputedRef<Partial<RI>[]>;
 
   public set(id: string | number, data: Partial<RI>): this;
 
