@@ -28,12 +28,12 @@ export declare class BaseModel<RI> extends CoreModel<RI> {
 
   constructor(public $resourceName: string, public $axios: Axios);
 
-  public collection(): ComputedRef<Ref<Partial<RI>>[]>;
+  public collection(): ComputedRef<Partial<RI>[]>;
 
   public item(id: string | number): Ref<Partial<RI>>;
 
   public index(options?: IndexOptions): {
-    data: ComputedRef<Ref<Partial<RI>>[]>;
+    data: ComputedRef<Partial<RI>[]>;
     loaded: Promise<boolean>;
     loading: Ref<boolean>;
   };
