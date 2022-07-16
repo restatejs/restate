@@ -16,12 +16,13 @@ class CoreModel<RI> {
   } {
     const loading = ref(true);
 
-    const loaded = new Promise<boolean>((resolve) => {
-      request().finally(() => {
-        loading.value = false;
-        resolve(true);
-      });
-    });
+    const loaded = (async () => {
+      await request();
+
+      loading.value = false;
+
+      return true;
+    })();
 
     return {
       loaded,
