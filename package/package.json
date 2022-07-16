@@ -1,6 +1,6 @@
 {
   "name": "@restatejs/restate",
-  "version": "1.0.0-alpha.15.2",
+  "version": "1.0.0-alpha.16.0",
   "author": "Everton Andrade <everton@andrade.mat.br>",
   "license": "MIT",
   "main": "index.js",
