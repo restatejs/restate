@@ -20,6 +20,14 @@ module.exports = {
       import: "./src/models/ItemModel.ts",
       filename: "models/ItemModel.js",
     },
+    loadUtil: {
+      import: "./src/utils/load.ts",
+      filename: "utils/load.js",
+    },
+    createURLUtil: {
+      import: "./src/utils/createURL.ts",
+      filename: "utils/createURL.js",
+    },
   },
   module: {
     rules: [

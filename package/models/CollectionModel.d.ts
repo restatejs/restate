@@ -1,3 +1,5 @@
+import type { Load } from "types/utils/load";
+
 import type { ComputedRef, Ref } from "vue";
 
 import { CoreModel } from "./CoreModel";
