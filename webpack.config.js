@@ -12,9 +12,13 @@ module.exports = {
       import: "./src/models/CoreModel.ts",
       filename: "models/CoreModel.js",
     },
-    baseModel: {
-      import: "./src/models/BaseModel.ts",
-      filename: "models/BaseModel.js",
+    collectionModel: {
+      import: "./src/models/CollectionModel.ts",
+      filename: "models/CollectionModel.js",
+    },
+    itemModel: {
+      import: "./src/models/ItemModel.ts",
+      filename: "models/ItemModel.js",
     },
   },
   module: {

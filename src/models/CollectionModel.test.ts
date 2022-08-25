@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { BaseModel } from "./BaseModel";
+import { CollectionModel } from "./CollectionModel";
 
 interface User {
   id: number;
@@ -29,17 +29,17 @@ jest.mock("axios");
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-const UsersModel = new BaseModel<User>("users", mockedAxios);
+const UsersModel = new CollectionModel<User>("users", mockedAxios);
 
-describe("BaseModel", () => {
+describe("CollectionModel", () => {
   test("item", async () => {
     UsersModel.$resource.set(1, camila);
 
     expect(UsersModel.item(1).value).toEqual(camila);
   });
 
-  test("collection", async () => {
-    expect(UsersModel.collection().value).toEqual([camila]);
+  test("data", async () => {
+    expect(UsersModel.data().value).toEqual([camila]);
   });
 
   test("index", async () => {
