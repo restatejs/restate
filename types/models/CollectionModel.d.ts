@@ -1,15 +1,16 @@
-import type { Load } from "types/utils/load";
-
+import type { Axios } from "axios";
 import type { ComputedRef, Ref } from "vue";
 
+import type { Load } from "../utils/load";
 import { CoreModel } from "./CoreModel";
 
 export interface BaseOptions {
   query?: Record<string, string>;
 }
 
-export interface IndexOptions extends BaseOptions {
+export interface IndexOptions<RI> extends BaseOptions {
   merge?: boolean;
+  afterRequest<R = RI[]>(data: RI[]): R;
 }
 
 export type ShowOptions = BaseOptions;
@@ -23,16 +24,20 @@ export type DestroyOptions = BaseOptions;
 export type LoadWithData<D> = Load & { data: D };
 
 export declare class CollectionModel<RI> extends CoreModel<RI> {
-  public $pk = "id";
+  public $pk: string;
 
-  constructor(public $resourceName: string, public $axios: Axios);
+  public $resourceName: string;
+
+  public $axios: Axios;
+
+  constructor($resourceName: string, $axios: Axios);
 
   public data(): ComputedRef<Partial<RI>[]>;
 
   public item(id: string | number): Ref<Partial<RI>>;
 
   public index(
-    options?: IndexOptions
+    options?: IndexOptions<RI>
   ): LoadWithData<ComputedRef<Partial<RI>[]>>;
 
   public show(
