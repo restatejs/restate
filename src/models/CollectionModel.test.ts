@@ -2,21 +2,28 @@ import axios from "axios";
 
 import { CollectionModel } from "./CollectionModel";
 
-interface User {
+interface UserResponse {
   id: number;
   name: string;
   age: number;
   height: number;
 }
 
-const camila: User = {
+interface UserEntity {
+  id: number;
+  name: string;
+  age: string;
+  height: number;
+}
+
+const camila: UserResponse = {
   id: 1,
   name: "Camila",
   age: 21,
   height: 1.54,
 };
 
-const deborah: User = {
+const deborah: UserResponse = {
   id: 2,
   name: "Deborah",
   age: 20,
@@ -29,11 +36,11 @@ jest.mock("axios");
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-const UsersModel = new CollectionModel<User>("users", mockedAxios);
+const UsersModel = new CollectionModel<UserEntity>("users", mockedAxios);
 
 describe("CollectionModel", () => {
   test("item", async () => {
-    UsersModel.$resource.set(1, camila);
+    UsersModel.$resource.set(1, camila as any);
 
     expect(UsersModel.item(1).value).toEqual(camila);
   });
@@ -66,6 +73,27 @@ describe("CollectionModel", () => {
     expect(data.value).toEqual(usersList);
   });
 
+  test("index:map", async () => {
+    UsersModel.$resource.clear();
+
+    mockedAxios.get.mockImplementation(() =>
+      Promise.resolve({ data: usersList })
+    );
+
+    const mapAfterRequest = (item: any) => {
+      item.name = item.name.toUpperCase();
+      item.age = `${item.age} Years`;
+
+      return item as UserEntity;
+    };
+
+    const { data, loaded } = UsersModel.index({ mapAfterRequest });
+
+    await loaded;
+
+    expect(data.value).toEqual(usersList.map(mapAfterRequest));
+  });
+
   test("show", async () => {
     UsersModel.$resource.clear();
 
@@ -86,6 +114,25 @@ describe("CollectionModel", () => {
     expect(UsersModel.$resource.get(1).value).toEqual(camila);
 
     expect(data.value).toEqual(camila);
+  });
+
+  test("show:map", async () => {
+    UsersModel.$resource.clear();
+
+    mockedAxios.get.mockImplementation(() => Promise.resolve({ data: camila }));
+
+    const mapAfterRequest = (item: any) => {
+      item.name = item.name.toUpperCase();
+      item.age = `${item.age} Years`;
+
+      return item as UserEntity;
+    };
+
+    const { data, loaded } = UsersModel.show(1, { mapAfterRequest });
+
+    await loaded;
+
+    expect(data.value).toEqual(mapAfterRequest(camila));
   });
 
   test("store", async () => {
@@ -111,6 +158,8 @@ describe("CollectionModel", () => {
   });
 
   test("update", async () => {
+    UsersModel.$resource.set(1, camila as any);
+
     expect(UsersModel.$resource.get(1)?.value.age).toBe(camila.age);
 
     const { loaded, loading } = UsersModel.update(camila.id, { age: 22 });
@@ -136,5 +185,54 @@ describe("CollectionModel", () => {
     expect(loading.value).toBe(false);
 
     expect(UsersModel.$resource.get(2).value).toEqual({});
+  });
+
+  test("$mapAfterRequest option", async () => {
+    const mapAfterRequest = (item: any) => {
+      item.name = item.name.toUpperCase();
+      item.age = `${item.age} Years`;
+
+      return item as UserEntity;
+    };
+
+    const UsersModel = new CollectionModel<UserEntity>("users", mockedAxios, {
+      mapAfterRequest,
+    });
+
+    mockedAxios.get.mockImplementation(() =>
+      Promise.resolve({ data: usersList })
+    );
+
+    const { data, loaded } = UsersModel.index();
+
+    await loaded;
+
+    expect(data.value).toEqual(usersList.map(mapAfterRequest));
+  });
+  test("$mapAfterRequest property", async () => {
+    const mapAfterRequest = (item: any) => {
+      item.name = item.name.toUpperCase();
+      item.age = `${item.age} Years`;
+
+      return item as UserEntity;
+    };
+
+    const UsersModel = new (class extends CollectionModel<UserEntity> {
+      $mapAfterRequest = mapAfterRequest;
+
+      constructor() {
+        super("users", mockedAxios);
+      }
+    })();
+
+    mockedAxios.get.mockImplementation(() =>
+      Promise.resolve({ data: usersList })
+    );
+
+    const { data, loaded } = UsersModel.index();
+
+    await loaded;
+
+    expect(data.value).toEqual(usersList.map(mapAfterRequest));
   });
 });
