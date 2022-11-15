@@ -1,9 +1,12 @@
 import { Resource } from "..";
 
 class CoreModel<RI> {
-  public $resource: Resource<RI>;
+  protected readonly $resource: Resource<RI>;
 
-  constructor(public $resourceName: string) {
+  protected readonly $resourceName: string;
+
+  constructor(resourceName: string) {
+    this.$resourceName = resourceName;
     this.$resource = new Resource<RI>();
   }
 }

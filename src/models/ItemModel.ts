@@ -1,8 +1,10 @@
 import type {
   LoadWithData,
+  MapAfterRequest,
   ShowOptions,
   UpdateOptions,
 } from "types/models/CollectionModel";
+import type { ItemModelOptions } from "types/models/ItemModel";
 import type { Load } from "types/utils/load";
 
 import type { Axios } from "axios";
@@ -14,10 +16,15 @@ import { load } from "@/utils/load";
 import { CoreModel } from "./CoreModel";
 
 class ItemModel<RI> extends CoreModel<RI> {
-  public $pk = "id";
+  public readonly $axios: Axios;
 
-  constructor(public $resourceName: string, public $axios: Axios) {
-    super($resourceName);
+  protected $mapAfterRequest?: MapAfterRequest;
+
+  constructor({ resourceName, axios, mapAfterRequest }: ItemModelOptions) {
+    super(resourceName);
+
+    this.$axios = axios;
+    this.$mapAfterRequest = mapAfterRequest;
   }
 
   public data(): Ref<RI> {
@@ -36,7 +43,12 @@ class ItemModel<RI> extends CoreModel<RI> {
     const { loaded, loading } = load(async () => {
       const { data } = await this.$axios.get<RI>(url);
 
-      this.$resource.set(this.$resourceName, data);
+      const mappedItem =
+        options?.mapAfterRequest?.(data) ??
+        this.$mapAfterRequest?.(data) ??
+        data;
+
+      this.$resource.set(this.$resourceName, mappedItem);
     });
 
     return {

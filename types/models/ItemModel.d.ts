@@ -4,10 +4,17 @@ import type { Ref } from "vue";
 import type { Load } from "../utils/load";
 import type {
   LoadWithData,
+  MapAfterRequest,
   ShowOptions,
   UpdateOptions,
 } from "./CollectionModel";
 import { CoreModel } from "./CoreModel";
+
+export interface ItemModelOptions {
+  resourceName: string;
+  axios: Axios;
+  mapAfterRequest?: MapAfterRequest;
+}
 
 export declare class ItemModel<RI> extends CoreModel<RI> {
   public $pk: string;
@@ -16,7 +23,7 @@ export declare class ItemModel<RI> extends CoreModel<RI> {
 
   public $axios: Axios;
 
-  constructor($resourceName: string, $axios: Axios);
+  constructor(options: ItemModelOptions);
 
   public data(): Ref<RI>;
 

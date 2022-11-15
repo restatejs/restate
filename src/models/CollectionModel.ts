@@ -20,21 +20,24 @@ import { load } from "@/utils/load";
 import { CoreModel } from "./CoreModel";
 
 class CollectionModel<RI> extends CoreModel<RI> {
-  public $pk = "id";
+  public readonly $primaryKey: string;
 
-  constructor(
-    public $resourceName: string,
-    public $axios: Axios,
-    public options?: CollectionModelOptions
-  ) {
-    super($resourceName);
+  public readonly $axios: Axios;
 
-    if (this.options?.mapAfterRequest) {
-      this.$mapAfterRequest = this.options.mapAfterRequest;
-    }
+  protected $mapAfterRequest?: MapAfterRequest;
+
+  constructor({
+    resourceName,
+    primaryKey,
+    axios,
+    mapAfterRequest,
+  }: CollectionModelOptions) {
+    super(resourceName);
+
+    this.$primaryKey = primaryKey;
+    this.$axios = axios;
+    this.$mapAfterRequest = mapAfterRequest;
   }
-
-  protected $mapAfterRequest?: MapAfterRequest = undefined;
 
   public data(): ComputedRef<RI[]> {
     return this.$resource.getAll();
@@ -64,7 +67,7 @@ class CollectionModel<RI> extends CoreModel<RI> {
           this.$mapAfterRequest?.(item) ??
           item;
 
-        this.$resource.set(item[this.$pk], mappedItem);
+        this.$resource.set(item[this.$primaryKey], mappedItem);
       });
     });
 
@@ -124,8 +127,8 @@ class CollectionModel<RI> extends CoreModel<RI> {
     const { loaded, loading } = load(async () => {
       const { data: responseData } = await this.$axios.post<RI>(url, data);
 
-      this.$resource.set((data as any)[this.$pk], responseData);
-      responseItemId.value = (data as any)[this.$pk];
+      this.$resource.set((data as any)[this.$primaryKey], responseData);
+      responseItemId.value = (data as any)[this.$primaryKey];
     });
 
     return {

@@ -7,6 +7,9 @@ import { CoreModel } from "./CoreModel";
 export type MapAfterRequest = (item: any) => RI;
 
 export interface CollectionModelOptions {
+  resourceName: string;
+  axios: Axios;
+  primaryKey: string;
   mapAfterRequest?: MapAfterRequest;
 }
 
@@ -32,19 +35,13 @@ export type DestroyOptions = BaseOptions;
 export type LoadWithData<D> = Load & { data: D };
 
 export declare class CollectionModel<RI> extends CoreModel<RI> {
-  public $pk: string;
+  public readonly $primaryKey: string;
 
-  public $resourceName: string;
-
-  public $axios: Axios;
+  public readonly $axios: Axios;
 
   protected $mapAfterRequest?: MapAfterRequest;
 
-  constructor(
-    $resourceName: string,
-    $axios: Axios,
-    options?: CollectionModelOptions
-  );
+  constructor(options: CollectionModelOptions);
 
   public data(): ComputedRef<RI[]>;
 
