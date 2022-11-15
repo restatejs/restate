@@ -1,8 +1,14 @@
-import type { Load } from "types/utils/load";
-
+import type { Axios } from "axios";
 import type { ComputedRef, Ref } from "vue";
 
+import type { Load } from "../utils/load";
 import { CoreModel } from "./CoreModel";
+
+export type MapAfterRequest = (item: any) => RI;
+
+export interface CollectionModelOptions {
+  mapAfterRequest?: MapAfterRequest;
+}
 
 export interface BaseOptions {
   query?: Record<string, string>;
@@ -10,9 +16,12 @@ export interface BaseOptions {
 
 export interface IndexOptions extends BaseOptions {
   merge?: boolean;
+  mapAfterRequest?: MapAfterRequest;
 }
 
-export type ShowOptions = BaseOptions;
+export interface ShowOptions extends BaseOptions {
+  mapAfterRequest?: MapAfterRequest;
+}
 
 export type StoreOptions = BaseOptions;
 
@@ -23,9 +32,19 @@ export type DestroyOptions = BaseOptions;
 export type LoadWithData<D> = Load & { data: D };
 
 export declare class CollectionModel<RI> extends CoreModel<RI> {
-  public $pk = "id";
+  public $pk: string;
 
-  constructor(public $resourceName: string, public $axios: Axios);
+  public $resourceName: string;
+
+  public $axios: Axios;
+
+  protected $mapAfterRequest?: MapAfterRequest;
+
+  constructor(
+    $resourceName: string,
+    $axios: Axios,
+    options?: CollectionModelOptions
+  );
 
   public data(): ComputedRef<Partial<RI>[]>;
 
@@ -40,14 +59,14 @@ export declare class CollectionModel<RI> extends CoreModel<RI> {
     options?: ShowOptions
   ): LoadWithData<Ref<Partial<RI> | Record<string, never>>>;
 
-  public store(
-    payload: Partial<RI>,
+  public store<P = Record<string, unknown>>(
+    payload: P,
     options?: StoreOptions
   ): LoadWithData<ComputedRef<Partial<RI> | null>>;
 
-  public update(
+  public update<D = Record<string, unknown>>(
     id: string | number,
-    data: Partial<RI>,
+    data: D,
     options?: UpdateOptions
   ): Load;
 

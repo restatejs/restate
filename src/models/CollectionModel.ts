@@ -5,6 +5,8 @@ import type {
   UpdateOptions,
   DestroyOptions,
   LoadWithData,
+  CollectionModelOptions,
+  MapAfterRequest,
 } from "types/models/CollectionModel";
 import type { Load } from "types/utils/load";
 
@@ -20,9 +22,19 @@ import { CoreModel } from "./CoreModel";
 class CollectionModel<RI> extends CoreModel<RI> {
   public $pk = "id";
 
-  constructor(public $resourceName: string, public $axios: Axios) {
+  constructor(
+    public $resourceName: string,
+    public $axios: Axios,
+    public options?: CollectionModelOptions
+  ) {
     super($resourceName);
+
+    if (this.options?.mapAfterRequest) {
+      this.$mapAfterRequest = this.options.mapAfterRequest;
+    }
   }
+
+  protected $mapAfterRequest?: MapAfterRequest = undefined;
 
   public data(): ComputedRef<RI[]> {
     return this.$resource.getAll();
@@ -46,7 +58,14 @@ class CollectionModel<RI> extends CoreModel<RI> {
         this.$resource.clear();
       }
 
-      data.forEach((item: any) => this.$resource.set(item[this.$pk], item));
+      data.forEach((item: any) => {
+        const mappedItem =
+          options?.mapAfterRequest?.(item) ??
+          this.$mapAfterRequest?.(item) ??
+          item;
+
+        this.$resource.set(item[this.$pk], mappedItem);
+      });
     });
 
     return {
@@ -69,7 +88,12 @@ class CollectionModel<RI> extends CoreModel<RI> {
     const { loaded, loading } = load(async () => {
       const { data } = await this.$axios.get<RI>(url);
 
-      this.$resource.set(id, data);
+      const mappedItem =
+        options?.mapAfterRequest?.(data) ??
+        this.$mapAfterRequest?.(data) ??
+        data;
+
+      this.$resource.set(id, mappedItem);
     });
 
     return {
@@ -79,8 +103,8 @@ class CollectionModel<RI> extends CoreModel<RI> {
     };
   }
 
-  public store(
-    data: Partial<RI>,
+  public store<P = Record<string, unknown>>(
+    data: P,
     options?: StoreOptions
   ): LoadWithData<ComputedRef<RI | null>> {
     const url = createURL(
@@ -111,9 +135,9 @@ class CollectionModel<RI> extends CoreModel<RI> {
     };
   }
 
-  public update(
+  public update<D = Record<string, unknown>>(
     id: string | number,
-    data: Partial<RI>,
+    data: D,
     options?: UpdateOptions
   ): Load {
     const url = createURL(
@@ -125,7 +149,7 @@ class CollectionModel<RI> extends CoreModel<RI> {
     return load(async () => {
       await this.$axios.put(url, data);
 
-      Object.entries(data).forEach(([key, val]) =>
+      Object.entries(data as any).forEach(([key, val]) =>
         this.$resource.setProperty(id, key, val as string | number)
       );
     });

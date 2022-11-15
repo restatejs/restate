@@ -1,7 +1,14 @@
+import type { Axios } from "axios";
 import type { ComputedRef, Ref } from "vue";
 
 import type { Load } from "../utils/load";
 import { CoreModel } from "./CoreModel";
+
+export type MapAfterRequest = (item: any) => RI;
+
+export interface CollectionModelOptions {
+  mapAfterRequest?: MapAfterRequest;
+}
 
 export interface BaseOptions {
   query?: Record<string, string>;
@@ -9,9 +16,12 @@ export interface BaseOptions {
 
 export interface IndexOptions extends BaseOptions {
   merge?: boolean;
+  mapAfterRequest?: MapAfterRequest;
 }
 
-export type ShowOptions = BaseOptions;
+export interface ShowOptions extends BaseOptions {
+  mapAfterRequest?: MapAfterRequest;
+}
 
 export type StoreOptions = BaseOptions;
 
@@ -28,7 +38,13 @@ export declare class CollectionModel<RI> extends CoreModel<RI> {
 
   public $axios: Axios;
 
-  constructor($resourceName: string, $axios: Axios);
+  protected $mapAfterRequest?: MapAfterRequest;
+
+  constructor(
+    $resourceName: string,
+    $axios: Axios,
+    options?: CollectionModelOptions
+  );
 
   public data(): ComputedRef<RI[]>;
 
@@ -41,14 +57,14 @@ export declare class CollectionModel<RI> extends CoreModel<RI> {
     options?: ShowOptions
   ): LoadWithData<Ref<RI | Record<string, never>>>;
 
-  public store(
-    data: Partial<RI>,
+  public store<P = Record<string, unknown>>(
+    payload: P,
     options?: StoreOptions
   ): LoadWithData<ComputedRef<RI | null>>;
 
-  public update(
+  public update<D = Record<string, unknown>>(
     id: string | number,
-    data: Partial<RI>,
+    data: D,
     options?: UpdateOptions
   ): Load;
 
