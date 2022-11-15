@@ -24,17 +24,15 @@ class CollectionModel<RI> extends CoreModel<RI> {
     super($resourceName);
   }
 
-  public data(): ComputedRef<Partial<RI>[]> {
+  public data(): ComputedRef<RI[]> {
     return this.$resource.getAll();
   }
 
-  public item(id: string | number): Ref<Partial<RI>> {
+  public item(id: string | number): Ref<RI> {
     return this.$resource.get(id);
   }
 
-  public index(
-    options?: IndexOptions
-  ): LoadWithData<ComputedRef<Partial<RI>[]>> {
+  public index(options?: IndexOptions): LoadWithData<ComputedRef<RI[]>> {
     const url = createURL(
       "/:resourceName",
       { resourceName: this.$resourceName },
@@ -61,7 +59,7 @@ class CollectionModel<RI> extends CoreModel<RI> {
   public show(
     id: string | number,
     options?: ShowOptions
-  ): LoadWithData<Ref<Partial<RI> | Record<string, never>>> {
+  ): LoadWithData<Ref<RI | Record<string, never>>> {
     const url = createURL(
       "/:resourceName/:id",
       { resourceName: this.$resourceName, id },
@@ -82,9 +80,9 @@ class CollectionModel<RI> extends CoreModel<RI> {
   }
 
   public store(
-    payload: Partial<RI>,
+    data: Partial<RI>,
     options?: StoreOptions
-  ): LoadWithData<ComputedRef<Partial<RI> | null>> {
+  ): LoadWithData<ComputedRef<RI | null>> {
     const url = createURL(
       "/:resourceName",
       { resourceName: this.$resourceName },
@@ -93,16 +91,16 @@ class CollectionModel<RI> extends CoreModel<RI> {
 
     const responseItemId: Ref<string | number | null> = ref(null);
 
-    const responseItem: ComputedRef<Partial<RI> | null> = computed(() => {
+    const responseItem: ComputedRef<RI | null> = computed(() => {
       if (responseItemId.value === null) return null;
 
       return this.$resource.get(responseItemId.value).value;
     });
 
     const { loaded, loading } = load(async () => {
-      const { data } = await this.$axios.post<Partial<RI>>(url, payload);
+      const { data: responseData } = await this.$axios.post<RI>(url, data);
 
-      this.$resource.set((data as any)[this.$pk], data);
+      this.$resource.set((data as any)[this.$pk], responseData);
       responseItemId.value = (data as any)[this.$pk];
     });
 

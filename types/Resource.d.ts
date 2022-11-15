@@ -1,17 +1,17 @@
 import type { ComputedRef, Ref } from "vue";
 
 export interface ResourceState<RI> {
-  data: Record<string | number, Ref<Partial<RI>>>;
+  data: Record<string | number, Ref<RI>>;
 }
 
 class Resource<RI> {
   public state: ResourceState;
 
-  public get(id: string | number): Ref<Partial<RI>>;
+  public get(id: string | number): Ref<RI>;
 
-  public getAll(): ComputedRef<Partial<RI>[]>;
+  public getAll(): ComputedRef<RI[]>;
 
-  public set(id: string | number, data: Partial<RI>): this;
+  public set(id: string | number, data: RI): this;
 
   public setProperty(
     id: string | number,

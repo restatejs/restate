@@ -1,7 +1,6 @@
-import type { Load } from "types/utils/load";
-
 import type { ComputedRef, Ref } from "vue";
 
+import type { Load } from "../utils/load";
 import { CoreModel } from "./CoreModel";
 
 export interface BaseOptions {
@@ -23,27 +22,29 @@ export type DestroyOptions = BaseOptions;
 export type LoadWithData<D> = Load & { data: D };
 
 export declare class CollectionModel<RI> extends CoreModel<RI> {
-  public $pk = "id";
+  public $pk: string;
 
-  constructor(public $resourceName: string, public $axios: Axios);
+  public $resourceName: string;
 
-  public data(): ComputedRef<Partial<RI>[]>;
+  public $axios: Axios;
 
-  public item(id: string | number): Ref<Partial<RI>>;
+  constructor($resourceName: string, $axios: Axios);
 
-  public index(
-    options?: IndexOptions
-  ): LoadWithData<ComputedRef<Partial<RI>[]>>;
+  public data(): ComputedRef<RI[]>;
+
+  public item(id: string | number): Ref<RI>;
+
+  public index(options?: IndexOptions): LoadWithData<ComputedRef<RI[]>>;
 
   public show(
     id: string | number,
     options?: ShowOptions
-  ): LoadWithData<Ref<Partial<RI> | Record<string, never>>>;
+  ): LoadWithData<Ref<RI | Record<string, never>>>;
 
   public store(
-    payload: Partial<RI>,
+    data: Partial<RI>,
     options?: StoreOptions
-  ): LoadWithData<ComputedRef<Partial<RI> | null>>;
+  ): LoadWithData<ComputedRef<RI | null>>;
 
   public update(
     id: string | number,

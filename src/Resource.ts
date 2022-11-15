@@ -10,26 +10,26 @@ class Resource<RI> {
     this.state = reactive({ data: {} });
   }
 
-  get(id: string | number): Ref<Partial<RI>> {
+  get(id: string | number): Ref<RI> {
     const item = this.state.data[id];
 
-    if (item === undefined) this.set(id, {});
+    if (item === undefined) this.set(id, {} as RI);
 
     return toRef(this.state.data, id);
   }
 
-  getAll(): ComputedRef<Partial<RI>[]> {
+  getAll(): ComputedRef<RI[]> {
     const computedCollection = computed(() => {
       const collection = Object.values(this.state.data) as unknown;
 
-      return collection as Partial<RI>[];
+      return collection as RI[];
     });
 
     return computedCollection;
   }
 
-  set(id: string | number, data: Partial<RI>): this {
-    this.state.data[id] = ref(data) as Ref<Partial<RI>>;
+  set(id: string | number, data: RI): this {
+    this.state.data[id] = ref(data) as Ref<RI>;
 
     return this;
   }

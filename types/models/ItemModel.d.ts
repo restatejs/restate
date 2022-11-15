@@ -1,8 +1,7 @@
-import type { Load } from "types/utils/load";
-
 import type { Axios } from "axios";
 import type { Ref } from "vue";
 
+import type { Load } from "../utils/load";
 import type {
   LoadWithData,
   ShowOptions,
@@ -10,20 +9,20 @@ import type {
 } from "./CollectionModel";
 import { CoreModel } from "./CoreModel";
 
-class ItemModel<RI> extends CoreModel<RI> {
-  public $pk = "id";
+export declare class ItemModel<RI> extends CoreModel<RI> {
+  public $pk: string;
 
-  constructor(public $resourceName: string, public $axios: Axios) {
-    super($resourceName);
-  }
+  public $resourceName: string;
 
-  public data(): Ref<Partial<RI>>;
+  public $axios: Axios;
+
+  constructor($resourceName: string, $axios: Axios);
+
+  public data(): Ref<RI>;
 
   public show(
     options?: ShowOptions
-  ): LoadWithData<Ref<Partial<RI> | Record<string, never>>>;
+  ): LoadWithData<Ref<RI | Record<string, never>>>;
 
   public update(data: Partial<RI>, options?: UpdateOptions): Load;
 }
-
-export { ItemModel };

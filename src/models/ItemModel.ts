@@ -20,13 +20,13 @@ class ItemModel<RI> extends CoreModel<RI> {
     super($resourceName);
   }
 
-  public data(): Ref<Partial<RI>> {
+  public data(): Ref<RI> {
     return this.$resource.get(this.$resourceName);
   }
 
   public show(
     options?: ShowOptions
-  ): LoadWithData<Ref<Partial<RI> | Record<string, never>>> {
+  ): LoadWithData<Ref<RI | Record<string, never>>> {
     const url = createURL(
       "/:resourceName",
       { resourceName: this.$resourceName },
