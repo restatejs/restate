@@ -18,7 +18,7 @@ export interface RequestOptions<D = unknown> {
   afterRequest?: AfterRequest<D>;
 }
 
-export declare class HTTPModel<RI> extends CoreModel<RI> {
+export declare class HTTPModel<RI extends object> extends CoreModel<RI> {
   public readonly $axios: Axios;
 
   protected $afterRequest?: AfterRequest;

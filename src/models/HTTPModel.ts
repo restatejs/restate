@@ -11,7 +11,7 @@ import { load } from "@/utils/load";
 
 import { CoreModel } from "./CoreModel";
 
-class HTTPModel<RI> extends CoreModel<RI> {
+class HTTPModel<RI extends object> extends CoreModel<RI> {
   public readonly $axios: Axios;
 
   protected $afterRequest?: AfterRequest;
