@@ -2,15 +2,15 @@ import type { Axios } from "axios";
 import type { ComputedRef, Ref } from "vue";
 
 import type { Load } from "../utils/load";
-import { CoreModel } from "./CoreModel";
+import { HTTPModel } from "./HTTPModel";
 
-export type MapAfterRequest = (item: any) => RI;
+export type ComputedProperty<RI> = (item: RI) => any;
 
 export interface CollectionModelOptions {
   resourceName: string;
   axios: Axios;
   primaryKey: string;
-  mapAfterRequest?: MapAfterRequest;
+  computedProperties?: Record<string, ComputedProperty<RI>>;
 }
 
 export interface BaseOptions {
@@ -19,12 +19,9 @@ export interface BaseOptions {
 
 export interface IndexOptions extends BaseOptions {
   merge?: boolean;
-  mapAfterRequest?: MapAfterRequest;
 }
 
-export interface ShowOptions extends BaseOptions {
-  mapAfterRequest?: MapAfterRequest;
-}
+export type ShowOptions = BaseOptions;
 
 export type StoreOptions = BaseOptions;
 
@@ -32,32 +29,37 @@ export type UpdateOptions = BaseOptions;
 
 export type DestroyOptions = BaseOptions;
 
-export type LoadWithData<D> = Load & { data: D };
+export type ArrayCompareFn<O> = (a: O, b: O) => number;
 
-export declare class CollectionModel<RI> extends CoreModel<RI> {
+export type ArrayFilterFn<O> = (value: O, index: number, array: O[]) => boolean;
+
+export interface CollectionModelDataOptions<RI> {
+  sort?: keyof RI | ArrayCompareFn<RI>;
+  filter: ArrayFilterFn<RI> | ArrayFilterFn<RI>[];
+}
+
+export declare class CollectionModel<RI> extends HTTPModel<RI> {
   public readonly $primaryKey: string;
 
-  public readonly $axios: Axios;
-
-  protected $mapAfterRequest?: MapAfterRequest;
+  protected readonly $computedProperties?: Record<string, ComputedProperty<RI>>;
 
   constructor(options: CollectionModelOptions);
 
-  public data(): ComputedRef<RI[]>;
+  public data(options?: CollectionModelDataOptions<RI>): ComputedRef<RI[]>;
 
   public item(id: string | number): Ref<RI>;
 
-  public index(options?: IndexOptions): LoadWithData<ComputedRef<RI[]>>;
+  public index(options?: IndexOptions): Load<ComputedRef<RI[]>>;
 
   public show(
     id: string | number,
     options?: ShowOptions
-  ): LoadWithData<Ref<RI | Record<string, never>>>;
+  ): Load<Ref<RI | Record<string, never>>>;
 
   public store<P = Record<string, unknown>>(
-    payload: P,
+    data: P,
     options?: StoreOptions
-  ): LoadWithData<ComputedRef<RI | null>>;
+  ): Load<ComputedRef<RI | null>>;
 
   public update<D = Record<string, unknown>>(
     id: string | number,

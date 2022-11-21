@@ -2,34 +2,34 @@ import type { Axios } from "axios";
 import type { Ref } from "vue";
 
 import type { Load } from "../utils/load";
-import type {
-  LoadWithData,
-  MapAfterRequest,
-  ShowOptions,
-  UpdateOptions,
-} from "./CollectionModel";
-import { CoreModel } from "./CoreModel";
+import { HTTPModel } from "./HTTPModel";
+
+export type ComputedProperty<RI> = (item: RI) => any;
 
 export interface ItemModelOptions {
   resourceName: string;
   axios: Axios;
-  mapAfterRequest?: MapAfterRequest;
+  computedProperties?: Record<string, ComputedProperty<RI>>;
 }
 
-export declare class ItemModel<RI> extends CoreModel<RI> {
-  public $pk: string;
+export interface BaseOptions {
+  query?: Record<string, string>;
+}
 
-  public $resourceName: string;
+export type ShowOptions = BaseOptions;
 
-  public $axios: Axios;
+export type UpdateOptions = BaseOptions;
+
+export declare class ItemModel<RI> extends HTTPModel<RI> {
+  public readonly $axios: Axios;
+
+  protected readonly $computedProperties?: Record<string, ComputedProperty<RI>>;
 
   constructor(options: ItemModelOptions);
 
   public data(): Ref<RI>;
 
-  public show(
-    options?: ShowOptions
-  ): LoadWithData<Ref<RI | Record<string, never>>>;
+  public show(options?: ShowOptions): Load<Ref<RI>>;
 
   public update(data: Partial<RI>, options?: UpdateOptions): Load;
 }

@@ -1,16 +1,44 @@
 import { load } from "./load";
 
-test("utils/load", async () => {
-  const { loaded, loading } = load(
-    () =>
-      new Promise((resolve) => {
+describe("utils/load", () => {
+  test("should be able to execute the load function", async () => {
+    const callback = () => {
+      return new Promise<void>((resolve) => {
         setTimeout(() => resolve(), 1000);
-      })
-  );
+      });
+    };
 
-  expect(loading.value).toBe(true);
+    const { loaded, loading } = load(callback);
 
-  await loaded;
+    expect(loading.value).toBe(true);
 
-  expect(loading.value).toBe(false);
+    await loaded;
+
+    expect(loading.value).toBe(false);
+  });
+
+  test("should be able to execute the load function with data", async () => {
+    const loadData = {
+      status: "beforeload",
+    };
+
+    const callback = () => {
+      return new Promise<void>((resolve) => {
+        setTimeout(() => {
+          loadData.status = "afterload";
+          resolve();
+        }, 1000);
+      });
+    };
+
+    const { loaded, loading, data } = load(callback, loadData);
+
+    expect(loading.value).toBe(true);
+    expect(data).toHaveProperty("status", "beforeload");
+
+    await loaded;
+
+    expect(loading.value).toBe(false);
+    expect(data).toHaveProperty("status", "afterload");
+  });
 });

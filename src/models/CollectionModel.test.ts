@@ -1,6 +1,9 @@
 import axios from "axios";
 
+import type { Resource } from "..";
+
 import { CollectionModel } from "./CollectionModel";
+import type { ItemModel } from "./ItemModel";
 
 interface UserResponse {
   id: number;
@@ -36,29 +39,39 @@ jest.mock("axios");
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-const UsersModel = new CollectionModel<UserEntity>("users", mockedAxios);
+describe("models/CollectionModel", () => {
+  let resourceName: string;
+  let collectionModel: CollectionModel<UserEntity>;
+  let resource: Resource<UserEntity>;
 
-describe("CollectionModel", () => {
-  test("item", async () => {
-    UsersModel.$resource.set(1, camila as any);
-
-    expect(UsersModel.item(1).value).toEqual(camila);
+  beforeAll(() => {
+    resourceName = "user";
+    collectionModel = new CollectionModel<UserEntity>({
+      primaryKey: "id",
+      resourceName,
+      axios: mockedAxios,
+    });
+    resource = Reflect.get(collectionModel, "$resource");
   });
 
-  test("data", async () => {
-    expect(UsersModel.data().value).toEqual([camila]);
+  test("should be able to execute the item function", async () => {
+    resource.set(1, camila as any);
+
+    expect(collectionModel.item(1).value).toEqual(camila);
   });
 
-  test("index", async () => {
-    UsersModel.$resource.clear();
+  test("should be able to execute the data function", async () => {
+    expect(collectionModel.data().value).toEqual([camila]);
+  });
 
-    mockedAxios.get.mockImplementation(() =>
-      Promise.resolve({ data: usersList })
-    );
+  test("should be able to execute the index function", async () => {
+    resource.clear();
 
-    expect(UsersModel.$resource.getAll().value).toEqual([]);
+    mockedAxios.request.mockImplementation(async () => ({ data: usersList }));
 
-    const { data, loaded, loading } = UsersModel.index();
+    expect(resource.getAll().value).toEqual([]);
+
+    const { data, loaded, loading } = collectionModel.index();
 
     expect(data.value).toEqual([]);
 
@@ -68,40 +81,19 @@ describe("CollectionModel", () => {
 
     expect(loading.value).toBe(false);
 
-    expect(UsersModel.$resource.getAll().value).toEqual(usersList);
+    expect(resource.getAll().value).toEqual(usersList);
 
     expect(data.value).toEqual(usersList);
   });
 
-  test("index:map", async () => {
-    UsersModel.$resource.clear();
+  test("should be able to execute the show function", async () => {
+    resource.clear();
 
-    mockedAxios.get.mockImplementation(() =>
-      Promise.resolve({ data: usersList })
-    );
+    mockedAxios.request.mockImplementation(async () => ({ data: camila }));
 
-    const mapAfterRequest = (item: any) => {
-      item.name = item.name.toUpperCase();
-      item.age = `${item.age} Years`;
+    expect(resource.get(1).value).toEqual({});
 
-      return item as UserEntity;
-    };
-
-    const { data, loaded } = UsersModel.index({ mapAfterRequest });
-
-    await loaded;
-
-    expect(data.value).toEqual(usersList.map(mapAfterRequest));
-  });
-
-  test("show", async () => {
-    UsersModel.$resource.clear();
-
-    mockedAxios.get.mockImplementation(() => Promise.resolve({ data: camila }));
-
-    expect(UsersModel.$resource.get(1).value).toEqual({});
-
-    const { data, loaded, loading } = UsersModel.show(1);
+    const { data, loaded, loading } = collectionModel.show(1);
 
     expect(data.value).toEqual({});
 
@@ -111,38 +103,17 @@ describe("CollectionModel", () => {
 
     expect(loading.value).toBe(false);
 
-    expect(UsersModel.$resource.get(1).value).toEqual(camila);
+    expect(resource.get(1).value).toEqual(camila);
 
     expect(data.value).toEqual(camila);
   });
 
-  test("show:map", async () => {
-    UsersModel.$resource.clear();
+  test("should be able to execute the store function", async () => {
+    mockedAxios.request.mockImplementation(async () => ({ data: deborah }));
 
-    mockedAxios.get.mockImplementation(() => Promise.resolve({ data: camila }));
+    expect(resource.get(2).value).toEqual({});
 
-    const mapAfterRequest = (item: any) => {
-      item.name = item.name.toUpperCase();
-      item.age = `${item.age} Years`;
-
-      return item as UserEntity;
-    };
-
-    const { data, loaded } = UsersModel.show(1, { mapAfterRequest });
-
-    await loaded;
-
-    expect(data.value).toEqual(mapAfterRequest(camila));
-  });
-
-  test("store", async () => {
-    mockedAxios.post.mockImplementation(() =>
-      Promise.resolve({ data: deborah })
-    );
-
-    expect(UsersModel.$resource.get(2).value).toEqual({});
-
-    const { data, loaded, loading } = UsersModel.store(deborah);
+    const { data, loaded, loading } = collectionModel.store(deborah);
 
     expect(data.value).toBe(null);
 
@@ -154,15 +125,15 @@ describe("CollectionModel", () => {
 
     expect(data.value).toEqual(deborah);
 
-    expect(UsersModel.$resource.get(2).value).toEqual(deborah);
+    expect(resource.get(2).value).toEqual(deborah);
   });
 
-  test("update", async () => {
-    UsersModel.$resource.set(1, camila as any);
+  test("should be able to execute the update function", async () => {
+    resource.set(1, camila as any);
 
-    expect(UsersModel.$resource.get(1)?.value.age).toBe(camila.age);
+    expect(resource.get(1)?.value.age).toBe(camila.age);
 
-    const { loaded, loading } = UsersModel.update(camila.id, { age: 22 });
+    const { loaded, loading } = collectionModel.update(camila.id, { age: 22 });
 
     expect(loading.value).toBe(true);
 
@@ -170,13 +141,13 @@ describe("CollectionModel", () => {
 
     expect(loading.value).toBe(false);
 
-    expect(UsersModel.$resource.get(1)?.value.age).toBe(22);
+    expect(resource.get(1)?.value.age).toBe(22);
   });
 
-  test("destroy", async () => {
-    expect(UsersModel.$resource.get(2).value).toEqual(deborah);
+  test("should be able to execute the destroy function", async () => {
+    expect(resource.get(2).value).toEqual(deborah);
 
-    const { loaded, loading } = UsersModel.destroy(deborah.id);
+    const { loaded, loading } = collectionModel.destroy(deborah.id);
 
     expect(loading.value).toBe(true);
 
@@ -184,55 +155,6 @@ describe("CollectionModel", () => {
 
     expect(loading.value).toBe(false);
 
-    expect(UsersModel.$resource.get(2).value).toEqual({});
-  });
-
-  test("$mapAfterRequest option", async () => {
-    const mapAfterRequest = (item: any) => {
-      item.name = item.name.toUpperCase();
-      item.age = `${item.age} Years`;
-
-      return item as UserEntity;
-    };
-
-    const UsersModel = new CollectionModel<UserEntity>("users", mockedAxios, {
-      mapAfterRequest,
-    });
-
-    mockedAxios.get.mockImplementation(() =>
-      Promise.resolve({ data: usersList })
-    );
-
-    const { data, loaded } = UsersModel.index();
-
-    await loaded;
-
-    expect(data.value).toEqual(usersList.map(mapAfterRequest));
-  });
-  test("$mapAfterRequest property", async () => {
-    const mapAfterRequest = (item: any) => {
-      item.name = item.name.toUpperCase();
-      item.age = `${item.age} Years`;
-
-      return item as UserEntity;
-    };
-
-    const UsersModel = new (class extends CollectionModel<UserEntity> {
-      $mapAfterRequest = mapAfterRequest;
-
-      constructor() {
-        super("users", mockedAxios);
-      }
-    })();
-
-    mockedAxios.get.mockImplementation(() =>
-      Promise.resolve({ data: usersList })
-    );
-
-    const { data, loaded } = UsersModel.index();
-
-    await loaded;
-
-    expect(data.value).toEqual(usersList.map(mapAfterRequest));
+    expect(resource.get(2).value).toEqual({});
   });
 });

@@ -4,118 +4,148 @@ import type {
   StoreOptions,
   UpdateOptions,
   DestroyOptions,
-  LoadWithData,
   CollectionModelOptions,
-  MapAfterRequest,
+  ComputedProperty,
+  CollectionModelDataOptions,
+  ArrayCompareFn,
 } from "types/models/CollectionModel";
+import type { AfterRequest } from "types/models/HTTPModel";
 import type { Load } from "types/utils/load";
 
-import type { Axios } from "axios";
 import type { ComputedRef, Ref } from "vue";
 import { computed, ref } from "vue";
 
-import { createURL } from "@/utils/createURL";
-import { load } from "@/utils/load";
+import { HTTPModel } from "./HTTPModel";
 
-import { CoreModel } from "./CoreModel";
-
-class CollectionModel<RI> extends CoreModel<RI> {
+class CollectionModel<RI> extends HTTPModel<RI> {
   public readonly $primaryKey: string;
 
-  public readonly $axios: Axios;
-
-  protected $mapAfterRequest?: MapAfterRequest;
+  protected readonly $computedProperties?: Record<string, ComputedProperty<RI>>;
 
   constructor({
     resourceName,
     primaryKey,
     axios,
-    mapAfterRequest,
+    computedProperties,
   }: CollectionModelOptions) {
-    super(resourceName);
+    super({ resourceName, axios });
 
     this.$primaryKey = primaryKey;
-    this.$axios = axios;
-    this.$mapAfterRequest = mapAfterRequest;
+    this.$computedProperties = computedProperties;
   }
 
-  public data(): ComputedRef<RI[]> {
-    return this.$resource.getAll();
+  public data(options?: CollectionModelDataOptions<RI>): ComputedRef<RI[]> {
+    const { sort, filter } = options ?? {};
+
+    let data = this.$resource.getAll();
+
+    if (filter || sort) {
+      data = computed(() => {
+        let clonedData = [...data.value];
+
+        if (filter) {
+          if (typeof filter === "function") {
+            clonedData = clonedData.filter(filter);
+          } else {
+            clonedData = clonedData.filter((item, index, array) => {
+              const filterFailed = filter
+                .map((filterCallback) => filterCallback(item, index, array))
+                .includes(false);
+
+              return !filterFailed;
+            });
+          }
+        }
+
+        if (sort) {
+          const callback: ArrayCompareFn<RI> =
+            typeof sort === "function"
+              ? sort
+              : (a: RI, b: RI) => `${a[sort]}`.localeCompare(`${b[sort]}`);
+
+          clonedData.sort(callback);
+        }
+
+        return clonedData;
+      });
+    }
+
+    return data;
   }
 
   public item(id: string | number): Ref<RI> {
     return this.$resource.get(id);
   }
 
-  public index(options?: IndexOptions): LoadWithData<ComputedRef<RI[]>> {
-    const url = createURL(
-      "/:resourceName",
-      { resourceName: this.$resourceName },
-      options?.query
-    );
+  public index(options?: IndexOptions): Load<ComputedRef<RI[]>> {
+    const responseItems = this.$resource.getAll();
 
-    const { loaded, loading } = load(async () => {
-      const { data } = await this.$axios.get<RI[]>(url);
-
+    const afterRequest: AfterRequest<RI[]> = (data) => {
       if (options?.merge !== true) {
         this.$resource.clear();
       }
 
+      const computedPropertiesEntries = Object.entries(
+        this.$computedProperties || {}
+      );
+
       data.forEach((item: any) => {
-        const mappedItem =
-          options?.mapAfterRequest?.(item) ??
-          this.$mapAfterRequest?.(item) ??
-          item;
+        if (this.$computedProperties) {
+          computedPropertiesEntries.forEach(([prop, callback]) => {
+            item[prop] = computed(() => callback(item));
+          });
+        }
 
-        this.$resource.set(item[this.$primaryKey], mappedItem);
+        this.$resource.set(item[this.$primaryKey], item);
       });
-    });
-
-    return {
-      data: this.$resource.getAll(),
-      loaded,
-      loading,
     };
+
+    return this.request(
+      `/${this.$resourceName}`,
+      {
+        method: "GET",
+        query: options?.query,
+        afterRequest,
+      },
+      responseItems
+    );
   }
 
   public show(
     id: string | number,
     options?: ShowOptions
-  ): LoadWithData<Ref<RI | Record<string, never>>> {
-    const url = createURL(
-      "/:resourceName/:id",
-      { resourceName: this.$resourceName, id },
-      options?.query
-    );
+  ): Load<Ref<RI | Record<string, never>>> {
+    const responseItem = this.$resource.get(id);
 
-    const { loaded, loading } = load(async () => {
-      const { data } = await this.$axios.get<RI>(url);
+    const afterRequest: AfterRequest<RI> = (data) => {
+      const computedPropertiesEntries = Object.entries(
+        this.$computedProperties || {}
+      );
 
-      const mappedItem =
-        options?.mapAfterRequest?.(data) ??
-        this.$mapAfterRequest?.(data) ??
-        data;
+      if (this.$computedProperties) {
+        computedPropertiesEntries.forEach(([prop, callback]) => {
+          (data as any)[prop] = computed(() => callback(data));
+        });
+      }
 
-      this.$resource.set(id, mappedItem);
-    });
-
-    return {
-      data: this.$resource.get(id),
-      loaded,
-      loading,
+      this.$resource.set(id, data);
     };
+
+    return this.request(
+      `/${this.$resourceName}/${id}`,
+      {
+        method: "GET",
+        query: options?.query,
+        afterRequest,
+      },
+      responseItem
+    );
   }
 
   public store<P = Record<string, unknown>>(
     data: P,
     options?: StoreOptions
-  ): LoadWithData<ComputedRef<RI | null>> {
-    const url = createURL(
-      "/:resourceName",
-      { resourceName: this.$resourceName },
-      options?.query
-    );
-
+  ): Load<ComputedRef<RI | null>> {
     const responseItemId: Ref<string | number | null> = ref(null);
 
     const responseItem: ComputedRef<RI | null> = computed(() => {
@@ -124,18 +154,21 @@ class CollectionModel<RI> extends CoreModel<RI> {
       return this.$resource.get(responseItemId.value).value;
     });
 
-    const { loaded, loading } = load(async () => {
-      const { data: responseData } = await this.$axios.post<RI>(url, data);
-
+    const afterRequest: AfterRequest<RI> = (responseData) => {
       this.$resource.set((data as any)[this.$primaryKey], responseData);
       responseItemId.value = (data as any)[this.$primaryKey];
-    });
-
-    return {
-      data: responseItem,
-      loaded,
-      loading,
     };
+
+    return this.request(
+      `/${this.$resourceName}`,
+      {
+        method: "POST",
+        query: options?.query,
+        data,
+        afterRequest,
+      },
+      responseItem
+    );
   }
 
   public update<D = Record<string, unknown>>(
@@ -143,31 +176,27 @@ class CollectionModel<RI> extends CoreModel<RI> {
     data: D,
     options?: UpdateOptions
   ): Load {
-    const url = createURL(
-      "/:resourceName/:id",
-      { resourceName: this.$resourceName, id },
-      options?.query
-    );
-
-    return load(async () => {
-      await this.$axios.put(url, data);
-
+    const afterRequest = () => {
       Object.entries(data as any).forEach(([key, val]) =>
         this.$resource.setProperty(id, key, val as string | number)
       );
+    };
+
+    return this.request(`/${this.$resourceName}/${id}`, {
+      method: "PUT",
+      query: options?.query,
+      data,
+      afterRequest,
     });
   }
 
   public destroy(id: string | number, options?: DestroyOptions): Load {
-    const url = createURL(
-      "/:resourceName/:id",
-      { resourceName: this.$resourceName, id },
-      options?.query
-    );
+    const afterRequest = () => this.$resource.delete(id);
 
-    return load(async () => {
-      await this.$axios.delete(url);
-      this.$resource.delete(id);
+    return this.request(`/${this.$resourceName}/${id}`, {
+      method: "DELETE",
+      query: options?.query,
+      afterRequest,
     });
   }
 }

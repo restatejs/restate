@@ -1,5 +1,7 @@
 import axios from "axios";
 
+import type { Resource } from "..";
+
 import { ItemModel } from "./ItemModel";
 
 interface User {
@@ -18,23 +20,31 @@ jest.mock("axios");
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-const UsersModel = new ItemModel<User>("user", mockedAxios);
+describe("models/ItemModel", () => {
+  let resourceName: string;
+  let itemModel: ItemModel<User>;
+  let resource: Resource<User>;
 
-describe("ItemModel", () => {
-  test("data", async () => {
-    UsersModel.$resource.set("user", camila);
-
-    expect(UsersModel.data().value).toEqual(camila);
+  beforeAll(() => {
+    resourceName = "user";
+    itemModel = new ItemModel<User>({ resourceName, axios: mockedAxios });
+    resource = Reflect.get(itemModel, "$resource");
   });
 
-  test("show", async () => {
-    UsersModel.$resource.clear();
+  test("should be able to execute the data function", async () => {
+    resource.set(resourceName, camila);
 
-    mockedAxios.get.mockImplementation(() => Promise.resolve({ data: camila }));
+    expect(itemModel.data().value).toEqual(camila);
+  });
 
-    expect(UsersModel.$resource.get("user").value).toEqual({});
+  test("should be able to execute the show function", async () => {
+    resource.clear();
 
-    const { data, loaded, loading } = UsersModel.show();
+    mockedAxios.request.mockImplementation(async () => ({ data: camila }));
+
+    expect(resource.get(resourceName).value).toEqual({});
+
+    const { data, loaded, loading } = itemModel.show();
 
     expect(data.value).toEqual({});
 
@@ -44,15 +54,15 @@ describe("ItemModel", () => {
 
     expect(loading.value).toBe(false);
 
-    expect(UsersModel.$resource.get("user").value).toEqual(camila);
+    expect(resource.get(resourceName).value).toEqual(camila);
 
     expect(data.value).toEqual(camila);
   });
 
-  test("update", async () => {
-    expect(UsersModel.$resource.get("user")?.value.age).toBe(camila.age);
+  test("should be able to execute the update function", async () => {
+    expect(resource.get(resourceName)?.value.age).toBe(camila.age);
 
-    const { loaded, loading } = UsersModel.update({ age: 22 });
+    const { loaded, loading } = itemModel.update({ age: 22 });
 
     expect(loading.value).toBe(true);
 
@@ -60,6 +70,6 @@ describe("ItemModel", () => {
 
     expect(loading.value).toBe(false);
 
-    expect(UsersModel.$resource.get("user")?.value.age).toBe(22);
+    expect(resource.get(resourceName)?.value.age).toBe(22);
   });
 });

@@ -1,9 +1,9 @@
 import type { Resource } from "..";
 
 export declare class CoreModel<RI> {
-  protected readonly $resource: Resource<RI>;
+  public readonly $resourceName: string;
 
-  protected readonly $resourceName: string;
+  protected readonly $resource: Resource<RI>;
 
   constructor(resourceName: string);
 }

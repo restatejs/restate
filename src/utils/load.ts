@@ -1,22 +1,26 @@
-import type { Ref } from "vue";
+import type { Load } from "types/utils/load";
+
 import { ref } from "vue";
 
-export function load(request: () => Promise<void>): {
-  loaded: Promise<boolean>;
-  loading: Ref<boolean>;
-} {
+export function load<D>(callback: () => Promise<void>, data?: D): Load<D> {
   const loading = ref(true);
 
   const loaded = (async () => {
-    await request();
+    await callback();
 
     loading.value = false;
 
     return true;
   })();
 
-  return {
+  const response: any = {
     loaded,
     loading,
   };
+
+  if (data) {
+    response.data = data;
+  }
+
+  return response;
 }
