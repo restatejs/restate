@@ -1,9 +1,9 @@
 import type { AfterRequest } from "types/models/HTTPModel";
 import type {
-  ComputedProperty,
   ItemModelOptions,
   ShowOptions,
   UpdateOptions,
+  ComputedProperty,
 } from "types/models/ItemModel";
 import type { Load } from "types/utils/load";
 
@@ -13,38 +13,34 @@ import { computed } from "vue";
 
 import { HTTPModel } from "./HTTPModel";
 
-class ItemModel<RI> extends HTTPModel<RI> {
+class ItemModel<RI extends object> extends HTTPModel<RI> {
   public readonly $axios: Axios;
 
-  protected readonly $computedProperties?: Record<string, ComputedProperty<RI>>;
+  protected readonly $computedProperties: Map<string, ComputedProperty<RI>>;
 
-  constructor({ resourceName, axios, computedProperties }: ItemModelOptions) {
+  constructor({
+    resourceName,
+    axios,
+    computedProperties = {},
+  }: ItemModelOptions<RI>) {
     super({ resourceName, axios });
 
     this.$axios = axios;
-    this.$computedProperties = computedProperties;
+    this.$computedProperties = new Map(Object.entries(computedProperties));
   }
 
-  public data(): Ref<RI> {
+  public data(): Ref<RI | undefined> {
     return this.$resource.get(this.$resourceName);
   }
 
-  public show(options?: ShowOptions): Load<Ref<RI>> {
-    const afterRequest: AfterRequest<RI> = (data) => {
-      const computedPropertiesEntries = Object.entries(
-        this.$computedProperties || {}
-      );
-
-      if (this.$computedProperties) {
-        computedPropertiesEntries.forEach(([prop, callback]) => {
-          (data as any)[prop] = computed(() => callback(data));
-        });
-      }
-
-      this.$resource.set(this.$resourceName, data);
-    };
-
+  public show(options?: ShowOptions): Load<Ref<RI | undefined>> {
     const responseItem = this.$resource.get(this.$resourceName);
+
+    const afterRequest: AfterRequest<RI> = (data) => {
+      this.$resource.set(this.$resourceName, data);
+
+      this.$insertComputedProperties(responseItem as Ref<RI>);
+    };
 
     return this.request(
       `${this.$resourceName}`,
@@ -73,6 +69,12 @@ class ItemModel<RI> extends HTTPModel<RI> {
       query: options?.query,
       data,
       afterRequest,
+    });
+  }
+
+  private $insertComputedProperties(data: Ref<RI>) {
+    this.$computedProperties.forEach((callback, prop) => {
+      (data.value as any)[prop] = computed(() => callback(data));
     });
   }
 }

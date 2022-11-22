@@ -5,9 +5,9 @@ import type {
   UpdateOptions,
   DestroyOptions,
   CollectionModelOptions,
-  ComputedProperty,
   CollectionModelDataOptions,
   ArrayCompareFn,
+  ComputedProperty,
 } from "types/models/CollectionModel";
 import type { AfterRequest } from "types/models/HTTPModel";
 import type { Load } from "types/utils/load";
@@ -17,21 +17,21 @@ import { computed, ref } from "vue";
 
 import { HTTPModel } from "./HTTPModel";
 
-class CollectionModel<RI> extends HTTPModel<RI> {
+class CollectionModel<RI extends object> extends HTTPModel<RI> {
   public readonly $primaryKey: string;
 
-  protected readonly $computedProperties?: Record<string, ComputedProperty<RI>>;
+  protected readonly $computedProperties: Map<string, ComputedProperty<RI>>;
 
   constructor({
     resourceName,
     primaryKey,
     axios,
-    computedProperties,
-  }: CollectionModelOptions) {
+    computedProperties = {},
+  }: CollectionModelOptions<RI>) {
     super({ resourceName, axios });
 
     this.$primaryKey = primaryKey;
-    this.$computedProperties = computedProperties;
+    this.$computedProperties = new Map(Object.entries(computedProperties));
   }
 
   public data(options?: CollectionModelDataOptions<RI>): ComputedRef<RI[]> {
@@ -73,7 +73,7 @@ class CollectionModel<RI> extends HTTPModel<RI> {
     return data;
   }
 
-  public item(id: string | number): Ref<RI> {
+  public item(id: string | number): Ref<RI | undefined> {
     return this.$resource.get(id);
   }
 
@@ -81,22 +81,17 @@ class CollectionModel<RI> extends HTTPModel<RI> {
     const responseItems = this.$resource.getAll();
 
     const afterRequest: AfterRequest<RI[]> = (data) => {
-      if (options?.merge !== true) {
+      if (options?.clear !== false) {
         this.$resource.clear();
       }
 
-      const computedPropertiesEntries = Object.entries(
-        this.$computedProperties || {}
-      );
+      data.forEach((item) => {
+        const refItem = this.$resource.set(
+          (item as any)[this.$primaryKey],
+          item
+        );
 
-      data.forEach((item: any) => {
-        if (this.$computedProperties) {
-          computedPropertiesEntries.forEach(([prop, callback]) => {
-            item[prop] = computed(() => callback(item));
-          });
-        }
-
-        this.$resource.set(item[this.$primaryKey], item);
+        this.$insertComputedProperties(refItem);
       });
     };
 
@@ -114,21 +109,13 @@ class CollectionModel<RI> extends HTTPModel<RI> {
   public show(
     id: string | number,
     options?: ShowOptions
-  ): Load<Ref<RI | Record<string, never>>> {
+  ): Load<Ref<RI | undefined>> {
     const responseItem = this.$resource.get(id);
 
     const afterRequest: AfterRequest<RI> = (data) => {
-      const computedPropertiesEntries = Object.entries(
-        this.$computedProperties || {}
-      );
-
-      if (this.$computedProperties) {
-        computedPropertiesEntries.forEach(([prop, callback]) => {
-          (data as any)[prop] = computed(() => callback(data));
-        });
-      }
-
       this.$resource.set(id, data);
+
+      this.$insertComputedProperties(responseItem as Ref<RI>);
     };
 
     return this.request(
@@ -145,18 +132,24 @@ class CollectionModel<RI> extends HTTPModel<RI> {
   public store<P = Record<string, unknown>>(
     data: P,
     options?: StoreOptions
-  ): Load<ComputedRef<RI | null>> {
+  ): Load<ComputedRef<RI | undefined>> {
     const responseItemId: Ref<string | number | null> = ref(null);
 
-    const responseItem: ComputedRef<RI | null> = computed(() => {
-      if (responseItemId.value === null) return null;
+    const responseItem: ComputedRef<RI | undefined> = computed(() => {
+      if (responseItemId.value === null) return undefined;
 
       return this.$resource.get(responseItemId.value).value;
     });
 
     const afterRequest: AfterRequest<RI> = (responseData) => {
-      this.$resource.set((data as any)[this.$primaryKey], responseData);
+      const item = this.$resource.set(
+        (data as any)[this.$primaryKey],
+        responseData
+      );
+
       responseItemId.value = (data as any)[this.$primaryKey];
+
+      this.$insertComputedProperties(item);
     };
 
     return this.request(
@@ -177,9 +170,9 @@ class CollectionModel<RI> extends HTTPModel<RI> {
     options?: UpdateOptions
   ): Load {
     const afterRequest = () => {
-      Object.entries(data as any).forEach(([key, val]) =>
-        this.$resource.setProperty(id, key, val as string | number)
-      );
+      Object.entries(data as any).forEach(([key, val]) => {
+        this.$resource.setProperty(id, key, val as string | number);
+      });
     };
 
     return this.request(`/${this.$resourceName}/${id}`, {
@@ -197,6 +190,12 @@ class CollectionModel<RI> extends HTTPModel<RI> {
       method: "DELETE",
       query: options?.query,
       afterRequest,
+    });
+  }
+
+  private $insertComputedProperties(data: Ref<RI>) {
+    this.$computedProperties.forEach((callback, prop) => {
+      (data.value as any)[prop] = computed(() => callback(data));
     });
   }
 }

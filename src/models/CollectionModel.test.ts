@@ -3,7 +3,6 @@ import axios from "axios";
 import type { Resource } from "..";
 
 import { CollectionModel } from "./CollectionModel";
-import type { ItemModel } from "./ItemModel";
 
 interface UserResponse {
   id: number;
@@ -17,6 +16,7 @@ interface UserEntity {
   name: string;
   age: string;
   height: number;
+  agePlus2: number;
 }
 
 const camila: UserResponse = {
@@ -50,40 +50,48 @@ describe("models/CollectionModel", () => {
       primaryKey: "id",
       resourceName,
       axios: mockedAxios,
+      computedProperties: {
+        agePlus2: (item) => item.value.age + 2,
+      },
     });
     resource = Reflect.get(collectionModel, "$resource");
   });
 
-  test("should be able to execute the item function", async () => {
-    resource.set(1, camila as any);
+  // test("should be able to execute the item function", async () => {
+  //   const refUser = resource.set(1, camila as any);
 
-    expect(collectionModel.item(1).value).toEqual(camila);
-  });
+  //   expect(refUser.value).toEqual(collectionModel.item(1).value);
+  //   expect(refUser.value).toEqual(camila);
+  // });
 
-  test("should be able to execute the data function", async () => {
-    expect(collectionModel.data().value).toEqual([camila]);
-  });
+  // test("should be able to execute the data function", async () => {
+  //   expect(collectionModel.data().value).toEqual([camila]);
+  // });
 
   test("should be able to execute the index function", async () => {
     resource.clear();
 
     mockedAxios.request.mockImplementation(async () => ({ data: usersList }));
 
-    expect(resource.getAll().value).toEqual([]);
+    const computedUsersList = resource.getAll();
 
-    const { data, loaded, loading } = collectionModel.index();
+    expect(computedUsersList.value).toEqual([]);
+
+    const { data, loaded } = collectionModel.index();
 
     expect(data.value).toEqual([]);
 
-    expect(loading.value).toBe(true);
-
     await loaded;
 
-    expect(loading.value).toBe(false);
+    expect(data.value).toEqual(computedUsersList.value);
 
-    expect(resource.getAll().value).toEqual(usersList);
-
-    expect(data.value).toEqual(usersList);
+    data.value.forEach((item) => {
+      expect(item).toHaveProperty("id");
+      expect(item).toHaveProperty("name");
+      expect(item).toHaveProperty("age");
+      expect(item).toHaveProperty("height");
+      expect(item).toHaveProperty("agePlus2", item.age + 2);
+    });
   });
 
   test("should be able to execute the show function", async () => {
@@ -91,70 +99,79 @@ describe("models/CollectionModel", () => {
 
     mockedAxios.request.mockImplementation(async () => ({ data: camila }));
 
-    expect(resource.get(1).value).toEqual({});
+    const refUser = resource.get(1);
 
-    const { data, loaded, loading } = collectionModel.show(1);
+    expect(refUser.value).toBe(undefined);
 
-    expect(data.value).toEqual({});
+    const { data, loaded } = collectionModel.show(1);
 
-    expect(loading.value).toBe(true);
+    expect(data.value).toBe(undefined);
 
     await loaded;
 
-    expect(loading.value).toBe(false);
+    expect(data.value).toEqual(refUser.value);
 
-    expect(resource.get(1).value).toEqual(camila);
-
-    expect(data.value).toEqual(camila);
+    expect(data.value).toHaveProperty("id");
+    expect(data.value).toHaveProperty("name");
+    expect(data.value).toHaveProperty("age");
+    expect(data.value).toHaveProperty("height");
+    expect(data.value).toHaveProperty(
+      "agePlus2",
+      data.value ? data.value.age + 2 : null
+    );
   });
 
   test("should be able to execute the store function", async () => {
     mockedAxios.request.mockImplementation(async () => ({ data: deborah }));
 
-    expect(resource.get(2).value).toEqual({});
+    const refUser = resource.get(2);
 
-    const { data, loaded, loading } = collectionModel.store(deborah);
+    expect(refUser.value).toBe(undefined);
 
-    expect(data.value).toBe(null);
+    const { data, loaded } = collectionModel.store(deborah);
 
-    expect(loading.value).toBe(true);
+    expect(data.value).toBe(undefined);
 
     await loaded;
 
-    expect(loading.value).toBe(false);
+    expect({ ...data.value }).toEqual({ ...refUser.value });
 
-    expect(data.value).toEqual(deborah);
-
-    expect(resource.get(2).value).toEqual(deborah);
+    expect(data.value).toHaveProperty("id");
+    expect(data.value).toHaveProperty("name");
+    expect(data.value).toHaveProperty("age");
+    expect(data.value).toHaveProperty("height");
+    expect(data.value).toHaveProperty(
+      "agePlus2",
+      data.value ? data.value.age + 2 : null
+    );
   });
 
   test("should be able to execute the update function", async () => {
     resource.set(1, camila as any);
 
-    expect(resource.get(1)?.value.age).toBe(camila.age);
+    const refUser = resource.get(1);
 
-    const { loaded, loading } = collectionModel.update(camila.id, { age: 22 });
+    expect(refUser.value?.age).toBe(camila.age);
+    expect(refUser.value).toHaveProperty(
+      "agePlus2",
+      refUser.value ? refUser.value.age + 2 : null
+    );
 
-    expect(loading.value).toBe(true);
+    const { loaded } = collectionModel.update(camila.id, { age: 22 });
 
     await loaded;
 
-    expect(loading.value).toBe(false);
-
-    expect(resource.get(1)?.value.age).toBe(22);
+    expect(refUser.value?.age).toBe(22);
+    expect(refUser.value).toHaveProperty("agePlus2", 24);
   });
 
   test("should be able to execute the destroy function", async () => {
-    expect(resource.get(2).value).toEqual(deborah);
+    expect(resource.get(2).value).not.toBe(undefined);
 
-    const { loaded, loading } = collectionModel.destroy(deborah.id);
-
-    expect(loading.value).toBe(true);
+    const { loaded } = collectionModel.destroy(deborah.id);
 
     await loaded;
 
-    expect(loading.value).toBe(false);
-
-    expect(resource.get(2).value).toEqual({});
+    expect(resource.get(2).value).toBe(undefined);
   });
 });

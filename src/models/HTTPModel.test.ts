@@ -13,7 +13,7 @@ describe("models/HTTPModel", () => {
     item.instanceAfterRequest = true;
   };
 
-  let httpModel: HTTPModel<unknown>;
+  let httpModel: HTTPModel<object>;
 
   beforeAll(() => {
     const resourceName = "test";

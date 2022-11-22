@@ -4,13 +4,15 @@ import type { ComputedRef, Ref } from "vue";
 import type { Load } from "../utils/load";
 import { HTTPModel } from "./HTTPModel";
 
-export type ComputedProperty<RI> = (item: RI) => any;
+export type ComputedProperty<RI> = (item: Ref<RI>) => any;
 
-export interface CollectionModelOptions {
+export type ComputedProperties<RI> = Record<string, ComputedProperty<RI>>;
+
+export interface CollectionModelOptions<RI> {
   resourceName: string;
   axios: Axios;
   primaryKey: string;
-  computedProperties?: Record<string, ComputedProperty<RI>>;
+  computedProperties?: ComputedProperties<RI>;
 }
 
 export interface BaseOptions {
@@ -18,7 +20,7 @@ export interface BaseOptions {
 }
 
 export interface IndexOptions extends BaseOptions {
-  merge?: boolean;
+  clear?: boolean;
 }
 
 export type ShowOptions = BaseOptions;
@@ -38,28 +40,28 @@ export interface CollectionModelDataOptions<RI> {
   filter: ArrayFilterFn<RI> | ArrayFilterFn<RI>[];
 }
 
-export declare class CollectionModel<RI> extends HTTPModel<RI> {
+export declare class CollectionModel<RI extends object> extends HTTPModel<RI> {
   public readonly $primaryKey: string;
 
-  protected readonly $computedProperties?: Record<string, ComputedProperty<RI>>;
+  protected readonly $computedProperties: Map<string, ComputedProperty<RI>>;
 
-  constructor(options: CollectionModelOptions);
+  constructor(options: CollectionModelOptions<RI>);
 
   public data(options?: CollectionModelDataOptions<RI>): ComputedRef<RI[]>;
 
-  public item(id: string | number): Ref<RI>;
+  public item(id: string | number): Ref<RI | undefined>;
 
   public index(options?: IndexOptions): Load<ComputedRef<RI[]>>;
 
   public show(
     id: string | number,
     options?: ShowOptions
-  ): Load<Ref<RI | Record<string, never>>>;
+  ): Load<Ref<RI | undefined>>;
 
   public store<P = Record<string, unknown>>(
     data: P,
     options?: StoreOptions
-  ): Load<ComputedRef<RI | null>>;
+  ): Load<ComputedRef<RI | undefined>>;
 
   public update<D = Record<string, unknown>>(
     id: string | number,
@@ -68,4 +70,6 @@ export declare class CollectionModel<RI> extends HTTPModel<RI> {
   ): Load;
 
   public destroy(id: string | number, options?: DestroyOptions): Load;
+
+  private $insertComputedProperties(data: Ref<RI>);
 }

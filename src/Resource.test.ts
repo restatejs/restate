@@ -5,7 +5,7 @@ interface User {
   name: string;
   age: number;
   height: number;
-  past?: number;
+  past?: boolean;
 }
 
 const camila: User = {
@@ -22,52 +22,69 @@ const deborah: User = {
   height: 1.59,
 };
 
-const resource = new Resource<User>();
-
-const state: { data: Record<string, Partial<User>> } = Reflect.get(
-  resource,
-  "state"
-);
-
 describe("Resource", () => {
-  test("should be able to execute the set function", () => {
-    expect(state.data[1]).toBe(undefined);
-    expect(state.data[2]).toBe(undefined);
+  let resource: Resource<User>;
+  let state: { data: Record<string, Partial<User>> };
 
-    resource.set(1, camila);
-    resource.set(2, deborah);
+  beforeAll(() => {
+    resource = new Resource<User>();
 
-    expect(state.data[1]).toEqual(camila);
-    expect(state.data[2]).toEqual(deborah);
+    state = Reflect.get(resource, "state");
+  });
+
+  beforeEach(() => {
+    resource.clear();
   });
 
   test("should be able to execute the get function", () => {
-    const resourceItem = resource.get(1).value;
+    expect(resource.get(1).value).toBe(undefined);
 
-    expect(resourceItem).toEqual(camila);
+    resource.set(1, camila);
+
+    expect(resource.get(1).value).toEqual(camila);
+  });
+
+  test("should be able to execute the set function", () => {
+    expect(state.data[1]).toBe(undefined);
+
+    const refCamila = resource.set(1, camila);
+
+    expect(state.data[1]).toEqual(refCamila.value);
+    expect(state.data[1]).toEqual(camila);
   });
 
   test("should be able to execute the getAll function", () => {
+    resource.set(1, camila);
+    resource.set(2, deborah);
+
     const resourceCollection = resource.getAll().value;
 
     expect(resourceCollection).toEqual([camila, deborah]);
   });
 
   test("should be able to execute the setProperty function", () => {
+    resource.set(1, { ...camila });
+
     expect(state.data[1].past).toBe(undefined);
 
-    resource.setProperty(1, "past", 1);
+    resource.setProperty(1, "past", true);
 
-    expect(state.data[1].past).toBe(1);
+    expect(state.data[1].past).toBe(true);
+
+    expect(() => resource.setProperty(2, "past", true)).toThrow();
   });
 
   test("should be able to execute the has function", () => {
+    expect(resource.has(1)).toBe(false);
+
+    resource.set(1, camila);
+
     expect(resource.has(1)).toBe(true);
-    expect(resource.has(2)).toBe(true);
-    expect(resource.has(3)).toBe(false);
   });
 
   test("should be able to execute the delete function", () => {
+    resource.set(1, camila);
+
     expect(state.data[1]).not.toBe(undefined);
 
     resource.delete(1);
@@ -76,6 +93,8 @@ describe("Resource", () => {
   });
 
   test("should be able to execute the clear function", () => {
+    resource.set(1, camila);
+
     expect(state.data).not.toEqual({});
 
     resource.clear();
