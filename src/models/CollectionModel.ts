@@ -7,7 +7,8 @@ import type {
   CollectionModelOptions,
   CollectionModelDataOptions,
   ArrayCompareFn,
-  ComputedProperty,
+  ComputedProperties,
+  MapAfterRequest,
 } from "types/models/CollectionModel";
 import type { AfterRequest } from "types/models/HTTPModel";
 import type { Load } from "types/utils/load";
@@ -17,21 +18,32 @@ import { computed, ref } from "vue";
 
 import { HTTPModel } from "./HTTPModel";
 
-class CollectionModel<RI extends object> extends HTTPModel<RI> {
+class CollectionModel<
+  RI extends object,
+  Response extends object = RI
+> extends HTTPModel<RI> {
   public readonly $primaryKey: string;
 
-  protected readonly $computedProperties: Map<string, ComputedProperty<RI>>;
+  protected readonly $computedProperties: ComputedProperties<RI>;
+
+  protected readonly $mapAfterRequest?: MapAfterRequest<Response, RI>;
 
   constructor({
     resourceName,
     primaryKey,
     axios,
     computedProperties = {},
-  }: CollectionModelOptions<RI>) {
+    mapAfterRequest,
+  }: CollectionModelOptions<RI, Response>) {
     super({ resourceName, axios });
 
     this.$primaryKey = primaryKey;
-    this.$computedProperties = new Map(Object.entries(computedProperties));
+
+    this.$computedProperties = new Map(
+      Object.entries(computedProperties)
+    ) as ComputedProperties<RI>;
+
+    this.$mapAfterRequest = mapAfterRequest;
   }
 
   public data(options?: CollectionModelDataOptions<RI>): ComputedRef<RI[]> {
@@ -80,15 +92,19 @@ class CollectionModel<RI extends object> extends HTTPModel<RI> {
   public index(options?: IndexOptions): Load<ComputedRef<RI[]>> {
     const responseItems = this.$resource.getAll();
 
-    const afterRequest: AfterRequest<RI[]> = (data) => {
+    const afterRequest: AfterRequest<Response[]> = (data) => {
+      const mappedData = this.$mapAfterRequest
+        ? data.map(this.$mapAfterRequest)
+        : data;
+
       if (options?.clear !== false) {
         this.$resource.clear();
       }
 
-      data.forEach((item) => {
+      mappedData.forEach((item) => {
         const refItem = this.$resource.set(
           (item as any)[this.$primaryKey],
-          item
+          item as unknown as RI
         );
 
         this.$insertComputedProperties(refItem);
@@ -112,8 +128,10 @@ class CollectionModel<RI extends object> extends HTTPModel<RI> {
   ): Load<Ref<RI | undefined>> {
     const responseItem = this.$resource.get(id);
 
-    const afterRequest: AfterRequest<RI> = (data) => {
-      this.$resource.set(id, data);
+    const afterRequest: AfterRequest<Response> = (data) => {
+      const mappedData = this.$mapAfterRequest?.(data) ?? data;
+
+      this.$resource.set(id, mappedData as unknown as RI);
 
       this.$insertComputedProperties(responseItem as Ref<RI>);
     };
@@ -141,10 +159,12 @@ class CollectionModel<RI extends object> extends HTTPModel<RI> {
       return this.$resource.get(responseItemId.value).value;
     });
 
-    const afterRequest: AfterRequest<RI> = (responseData) => {
+    const afterRequest: AfterRequest<Response> = (responseData) => {
+      const mappedData = this.$mapAfterRequest?.(responseData) ?? responseData;
+
       const item = this.$resource.set(
         (data as any)[this.$primaryKey],
-        responseData
+        mappedData as unknown as RI
       );
 
       responseItemId.value = (data as any)[this.$primaryKey];
@@ -193,9 +213,19 @@ class CollectionModel<RI extends object> extends HTTPModel<RI> {
     });
   }
 
-  private $insertComputedProperties(data: Ref<RI>) {
+  private $insertComputedProperties(data: Ref<RI>): void {
+    if (Reflect.get(data.value, "_insertedComputedProperties")) {
+      return;
+    }
+
+    Reflect.set(data.value, "_insertedComputedProperties", true);
+
     this.$computedProperties.forEach((callback, prop) => {
-      (data.value as any)[prop] = computed(() => callback(data));
+      if (prop in data.value) {
+        throw new Error(`The ${String(prop)} property is already defined.`);
+      }
+
+      data.value[prop] = computed(() => callback(data)) as any;
     });
   }
 }

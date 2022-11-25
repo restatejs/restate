@@ -4,24 +4,18 @@ import type { Resource } from "..";
 
 import { ItemModel } from "./ItemModel";
 
+interface UserEntity {
+  name: string;
+  age: number;
+  height: string;
+  agePlus2: number;
+}
+
 interface UserResponse {
   name: string;
   age: number;
   height: number;
 }
-
-interface UserEntity {
-  name: string;
-  age: number;
-  height: number;
-  agePlus2: number;
-}
-
-const camila: UserResponse = {
-  name: "Camila",
-  age: 21,
-  height: 1.54,
-};
 
 jest.mock("axios");
 
@@ -29,25 +23,49 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe("models/ItemModel", () => {
   let resourceName: string;
-  let itemModel: ItemModel<UserEntity>;
+  let itemModel: ItemModel<UserEntity, UserResponse>;
   let resource: Resource<UserEntity>;
+
+  let itemA: () => UserResponse;
+
+  let plus2: (num: number) => number;
+  let addMeter: (val: number | string) => string;
 
   beforeAll(() => {
     resourceName = "user";
-    itemModel = new ItemModel<UserEntity>({
+    itemModel = new ItemModel<UserEntity, UserResponse>({
       resourceName,
       axios: mockedAxios,
       computedProperties: {
-        agePlus2: (item) => item.value.age + 2,
+        agePlus2: (item) => plus2(item.value.age),
+      },
+      mapAfterRequest: (item) => {
+        item.height = addMeter(item.height) as any;
+
+        return item;
       },
     });
+
     resource = Reflect.get(itemModel, "$resource");
+
+    itemA = () => ({
+      name: "Camila",
+      age: 21,
+      height: 1.54,
+    });
+
+    plus2 = (num) => num + 2;
+    addMeter = (val) => `${val} m`;
+  });
+
+  beforeEach(() => {
+    resource.clear();
   });
 
   test("should be able to execute the show function", async () => {
-    resource.clear();
-
-    mockedAxios.request.mockImplementation(async () => ({ data: camila }));
+    mockedAxios.request.mockImplementation(async () => ({
+      data: itemA(),
+    }));
 
     const { data, loaded } = itemModel.show();
 
@@ -55,31 +73,42 @@ describe("models/ItemModel", () => {
 
     await loaded;
 
-    expect(data.value).toHaveProperty("name", camila.name);
-    expect(data.value).toHaveProperty("age", camila.age);
-    expect(data.value).toHaveProperty("height", camila.height);
-    expect(data.value).toHaveProperty("agePlus2", 23);
+    expect(data.value).toHaveProperty("name", itemA().name);
+    expect(data.value).toHaveProperty("age", itemA().age);
+    expect(data.value).toHaveProperty("height", addMeter(itemA().height));
+    expect(data.value).toHaveProperty("agePlus2", plus2(itemA().age));
   });
 
   test("should be able to execute the update function", async () => {
-    const data = resource.get(resourceName);
+    mockedAxios.request.mockImplementation(async () => ({
+      data: itemA(),
+    }));
+    const { loaded: showLoaded, data } = itemModel.show();
+    await showLoaded;
 
-    expect(data.value?.age).toBe(camila.age);
+    expect(data.value?.age).toBe(itemA().age);
 
-    const { loaded } = itemModel.update({ age: 22 });
+    const newAge = 22;
 
-    await loaded;
+    const { loaded: updateLoaded } = itemModel.update({ age: newAge });
+    await updateLoaded;
 
-    expect(data.value).toHaveProperty("age", 22);
-    expect(data.value).toHaveProperty("agePlus2", 24);
+    expect(data.value).toHaveProperty("age", newAge);
+    expect(data.value).toHaveProperty("agePlus2", plus2(newAge));
   });
 
   test("should be able to execute the data function", async () => {
+    mockedAxios.request.mockImplementation(async () => ({
+      data: itemA(),
+    }));
+    const { loaded: showLoaded } = itemModel.show();
+    await showLoaded;
+
     const data = itemModel.data();
 
-    expect(data.value).toHaveProperty("name", camila.name);
-    expect(data.value).toHaveProperty("age", 22);
-    expect(data.value).toHaveProperty("height", camila.height);
-    expect(data.value).toHaveProperty("agePlus2", 24);
+    expect(data.value).toHaveProperty("name", itemA().name);
+    expect(data.value).toHaveProperty("age", itemA().age);
+    expect(data.value).toHaveProperty("height", addMeter(itemA().height));
+    expect(data.value).toHaveProperty("agePlus2", plus2(itemA().age));
   });
 });

@@ -3,7 +3,8 @@ import type {
   ItemModelOptions,
   ShowOptions,
   UpdateOptions,
-  ComputedProperty,
+  ComputedProperties,
+  MapAfterRequest,
 } from "types/models/ItemModel";
 import type { Load } from "types/utils/load";
 
@@ -13,20 +14,31 @@ import { computed } from "vue";
 
 import { HTTPModel } from "./HTTPModel";
 
-class ItemModel<RI extends object> extends HTTPModel<RI> {
+class ItemModel<
+  RI extends object,
+  Response extends object = RI
+> extends HTTPModel<RI> {
   public readonly $axios: Axios;
 
-  protected readonly $computedProperties: Map<string, ComputedProperty<RI>>;
+  protected readonly $computedProperties: ComputedProperties<RI>;
+
+  protected readonly $mapAfterRequest?: MapAfterRequest<Response, RI>;
 
   constructor({
     resourceName,
     axios,
     computedProperties = {},
-  }: ItemModelOptions<RI>) {
+    mapAfterRequest,
+  }: ItemModelOptions<RI, Response>) {
     super({ resourceName, axios });
 
     this.$axios = axios;
-    this.$computedProperties = new Map(Object.entries(computedProperties));
+
+    this.$computedProperties = new Map(
+      Object.entries(computedProperties)
+    ) as ComputedProperties<RI>;
+
+    this.$mapAfterRequest = mapAfterRequest;
   }
 
   public data(): Ref<RI | undefined> {
@@ -36,8 +48,10 @@ class ItemModel<RI extends object> extends HTTPModel<RI> {
   public show(options?: ShowOptions): Load<Ref<RI | undefined>> {
     const responseItem = this.$resource.get(this.$resourceName);
 
-    const afterRequest: AfterRequest<RI> = (data) => {
-      this.$resource.set(this.$resourceName, data);
+    const afterRequest: AfterRequest<Response> = (data) => {
+      const mappedData = this.$mapAfterRequest?.(data) ?? data;
+
+      this.$resource.set(this.$resourceName, mappedData as RI);
 
       this.$insertComputedProperties(responseItem as Ref<RI>);
     };
@@ -73,8 +87,18 @@ class ItemModel<RI extends object> extends HTTPModel<RI> {
   }
 
   private $insertComputedProperties(data: Ref<RI>) {
+    if (Reflect.get(data.value, "_insertedComputedProperties")) {
+      return;
+    }
+
+    Reflect.set(data.value, "_insertedComputedProperties", true);
+
     this.$computedProperties.forEach((callback, prop) => {
-      (data.value as any)[prop] = computed(() => callback(data));
+      if (prop in data.value) {
+        throw new Error(`The ${String(prop)} property is already defined.`);
+      }
+
+      data.value[prop] = computed(() => callback(data)) as any;
     });
   }
 }

@@ -4,14 +4,19 @@ import type { Ref } from "vue";
 import type { Load } from "../utils/load";
 import { HTTPModel } from "./HTTPModel";
 
-export type ComputedProperty<RI> = (item: Ref<RI>) => any;
+export type ComputedProperty<RI, Return = unknown> = (item: Ref<RI>) => Return;
 
-export type ComputedProperties<RI> = Record<string, ComputedProperty<RI>>;
+export type ComputedProperties<RI> = Map<keyof RI, ComputedProperty<RI>>;
 
-export interface ItemModelOptions<RI> {
+export type MapAfterRequest<Response, RI> = (item: Response) => unknown;
+
+export interface ItemModelOptions<RI, Response> {
   resourceName: string;
   axios: Axios;
-  computedProperties?: ComputedProperties<RI>;
+  computedProperties?: {
+    [Prop in keyof RI]?: ComputedProperty<RI, RI[Prop]>;
+  };
+  mapAfterRequest?: MapAfterRequest<Response, RI>;
 }
 
 export interface BaseOptions {
@@ -22,12 +27,15 @@ export type ShowOptions = BaseOptions;
 
 export type UpdateOptions = BaseOptions;
 
-export declare class ItemModel<RI extends object> extends HTTPModel<RI> {
+export declare class ItemModel<
+  RI extends object,
+  Response extends object = RI
+> extends HTTPModel<RI> {
   public readonly $axios: Axios;
 
-  protected readonly $computedProperties: Map<string, ComputedProperty<RI>>;
+  protected readonly $computedProperties: ComputedProperties<RI>;
 
-  constructor(options: ItemModelOptions<RI>);
+  constructor(options: ItemModelOptions<RI, Response>);
 
   public data(): Ref<RI | undefined>;
 
@@ -35,5 +43,5 @@ export declare class ItemModel<RI extends object> extends HTTPModel<RI> {
 
   public update(data: Partial<RI>, options?: UpdateOptions): Load;
 
-  private $insertComputedProperties(data: Ref<RI>);
+  private $insertComputedProperties(data: Ref<RI>): void;
 }
