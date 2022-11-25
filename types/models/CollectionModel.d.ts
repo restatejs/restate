@@ -42,7 +42,7 @@ export type ArrayFilterFn<O> = (value: O, index: number, array: O[]) => boolean;
 
 export interface CollectionModelDataOptions<RI> {
   sort?: keyof RI | ArrayCompareFn<RI>;
-  filter: ArrayFilterFn<RI> | ArrayFilterFn<RI>[];
+  filter?: ArrayFilterFn<RI> | ArrayFilterFn<RI>[];
 }
 
 export declare class CollectionModel<
