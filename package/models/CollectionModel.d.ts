@@ -4,15 +4,20 @@ import type { ComputedRef, Ref } from "vue";
 import type { Load } from "../utils/load";
 import { HTTPModel } from "./HTTPModel";
 
-export type ComputedProperty<RI> = (item: Ref<RI>) => any;
+export type ComputedProperty<RI, Return = unknown> = (item: Ref<RI>) => Return;
 
-export type ComputedProperties<RI> = Record<string, ComputedProperty<RI>>;
+export type ComputedProperties<RI> = Map<keyof RI, ComputedProperty<RI>>;
 
-export interface CollectionModelOptions<RI> {
+export type MapAfterRequest<Response, RI> = (item: Response) => unknown;
+
+export interface CollectionModelOptions<RI, Response> {
   resourceName: string;
   axios: Axios;
   primaryKey: string;
-  computedProperties?: ComputedProperties<RI>;
+  computedProperties?: {
+    [Prop in keyof RI]?: ComputedProperty<RI, RI[Prop]>;
+  };
+  mapAfterRequest?: MapAfterRequest<Response, RI>;
 }
 
 export interface BaseOptions {
@@ -40,12 +45,15 @@ export interface CollectionModelDataOptions<RI> {
   filter: ArrayFilterFn<RI> | ArrayFilterFn<RI>[];
 }
 
-export declare class CollectionModel<RI extends object> extends HTTPModel<RI> {
+export declare class CollectionModel<
+  RI extends object,
+  Response extends object = RI
+> extends HTTPModel<RI> {
   public readonly $primaryKey: string;
 
-  protected readonly $computedProperties: Map<string, ComputedProperty<RI>>;
+  protected readonly $computedProperties: ComputedProperties<RI>;
 
-  constructor(options: CollectionModelOptions<RI>);
+  constructor(options: CollectionModelOptions<RI, Response>);
 
   public data(options?: CollectionModelDataOptions<RI>): ComputedRef<RI[]>;
 
@@ -71,5 +79,5 @@ export declare class CollectionModel<RI extends object> extends HTTPModel<RI> {
 
   public destroy(id: string | number, options?: DestroyOptions): Load;
 
-  private $insertComputedProperties(data: Ref<RI>);
+  private $insertComputedProperties(data: Ref<RI>): void;
 }
