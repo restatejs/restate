@@ -28,12 +28,14 @@ export type ShowOptions = BaseOptions;
 export type UpdateOptions = BaseOptions;
 
 export declare class ItemModel<
-  RI extends object,
-  Response extends object = RI
-> extends HTTPModel<RI> {
-  public readonly $axios: Axios;
+  RI extends ResourceEntity,
+  Response extends ResourceEntity = RI
+> extends HTTPModel {
+  protected readonly $resource: ItemResource<RI>;
 
   protected readonly $computedProperties: ComputedProperties<RI>;
+
+  protected readonly $mapAfterRequest?: MapAfterRequest<Response>;
 
   constructor(options: ItemModelOptions<RI, Response>);
 
