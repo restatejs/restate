@@ -10,10 +10,10 @@ export type ComputedProperties<RI> = Map<keyof RI, ComputedProperty<RI>>;
 
 export type MapAfterRequest<Response> = (item: Response) => unknown;
 
-export interface CollectionModelOptions<RI, Response> {
+export interface CollectionModelOptions<RI, Response, PK> {
   resourceName: string;
   axios: Axios;
-  primaryKey: string;
+  primaryKey: PK;
   computedProperties?: {
     [Prop in keyof RI]?: ComputedProperty<RI, RI[Prop]>;
   };
@@ -46,25 +46,27 @@ export interface CollectionModelDataOptions<RI> {
 }
 
 export declare class CollectionModel<
-  RI extends object,
-  Response extends object = RI
-> extends HTTPModel<RI> {
+  RI extends ResourceEntity,
+  PK extends PickNumberOrStringKeys<RI>,
+  Response extends ResourceEntity = RI
+> extends HTTPModel {
+  public readonly $resource: CollectionResource<RI, PK>;
+
   public readonly $primaryKey: string;
 
   protected readonly $computedProperties: ComputedProperties<RI>;
 
-  constructor(options: CollectionModelOptions<RI, Response>);
+  protected readonly $mapAfterRequest?: MapAfterRequest<Response>;
+
+  constructor(options: CollectionModelOptions<RI, Response, PK>);
 
   public data(options?: CollectionModelDataOptions<RI>): ComputedRef<RI[]>;
 
-  public item(id: string | number): Ref<RI | undefined>;
+  public item(id: RI[PK]): Ref<RI | undefined>;
 
   public index(options?: IndexOptions): Load<ComputedRef<RI[]>>;
 
-  public show(
-    id: string | number,
-    options?: ShowOptions
-  ): Load<Ref<RI | undefined>>;
+  public show(id: RI[PK], options?: ShowOptions): Load<Ref<RI | undefined>>;
 
   public store<P = Record<string, unknown>>(
     data: P,
@@ -72,12 +74,12 @@ export declare class CollectionModel<
   ): Load<ComputedRef<RI | undefined>>;
 
   public update<D = Record<string, unknown>>(
-    id: string | number,
+    id: RI[PK],
     data: D,
     options?: UpdateOptions
   ): Load;
 
-  public destroy(id: string | number, options?: DestroyOptions): Load;
+  public destroy(id: RI[PK], options?: DestroyOptions): Load;
 
   private $insertComputedProperties(data: Ref<RI>): void;
 }

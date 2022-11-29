@@ -82,7 +82,7 @@ class ItemModel<
     });
   }
 
-  private $insertComputedProperties(data: Ref<RI>) {
+  private $insertComputedProperties(data: Ref<RI>): void {
     if (Reflect.get(data.value, "_insertedComputedProperties")) {
       return;
     }

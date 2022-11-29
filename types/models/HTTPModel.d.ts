@@ -1,7 +1,6 @@
 import type { Axios, Method } from "axios";
 
 import type { Load } from "../utils/load";
-import { CoreModel } from "./CoreModel";
 
 export type AfterRequest<D = unknown> = (data: D) => Promise<void> | void;
 
@@ -18,7 +17,9 @@ export interface RequestOptions<D = unknown> {
   afterRequest?: AfterRequest<D>;
 }
 
-export declare class HTTPModel<RI extends object> extends CoreModel<RI> {
+export declare class HTTPModel {
+  public readonly $resourceName: string;
+
   public readonly $axios: Axios;
 
   protected $afterRequest?: AfterRequest;

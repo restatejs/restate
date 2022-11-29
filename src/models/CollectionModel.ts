@@ -40,7 +40,7 @@ class CollectionModel<
     axios,
     computedProperties = {},
     mapAfterRequest,
-  }: CollectionModelOptions<RI, Response>) {
+  }: CollectionModelOptions<RI, Response, PK>) {
     super({ resourceName, axios });
 
     this.$resource = new CollectionResource();
