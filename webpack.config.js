@@ -8,9 +8,9 @@ module.exports = {
   target: "web",
   entry: {
     index: "./src/index.ts",
-    coreModel: {
-      import: "./src/models/CoreModel.ts",
-      filename: "models/CoreModel.js",
+    httpModel: {
+      import: "./src/models/HTTPModel.ts",
+      filename: "models/HTTPModel.js",
     },
     collectionModel: {
       import: "./src/models/CollectionModel.ts",
@@ -19,6 +19,14 @@ module.exports = {
     itemModel: {
       import: "./src/models/ItemModel.ts",
       filename: "models/ItemModel.js",
+    },
+    collectionResource: {
+      import: "./src/resources/CollectionResource.ts",
+      filename: "resources/CollectionResource.js",
+    },
+    itemResource: {
+      import: "./src/resources/ItemResource.ts",
+      filename: "resources/ItemResource.js",
     },
     loadUtil: {
       import: "./src/utils/load.ts",

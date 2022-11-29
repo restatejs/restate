@@ -1,4 +1,6 @@
-import { Resource } from "./Resource";
+import type { ResourceCollectionState } from "types/resources/CollectionResource";
+
+import { CollectionResource } from "./CollectionResource";
 
 interface User {
   id: number;
@@ -22,12 +24,12 @@ const deborah: User = {
   height: 1.59,
 };
 
-describe("Resource", () => {
-  let resource: Resource<User>;
-  let state: { data: Record<string, Partial<User>> };
+describe("CollectionResource", () => {
+  let resource: CollectionResource<User, "id">;
+  let state: ResourceCollectionState<User, "id">;
 
   beforeAll(() => {
-    resource = new Resource<User>();
+    resource = new CollectionResource<User, "id">();
 
     state = Reflect.get(resource, "state");
   });
@@ -65,11 +67,11 @@ describe("Resource", () => {
   test("should be able to execute the setProperty function", () => {
     resource.set(1, { ...camila });
 
-    expect(state.data[1].past).toBe(undefined);
+    expect(state.data[1]?.past).toBe(undefined);
 
     resource.setProperty(1, "past", true);
 
-    expect(state.data[1].past).toBe(true);
+    expect(state.data[1]?.past).toBe(true);
 
     expect(() => resource.setProperty(2, "past", true)).toThrow();
   });

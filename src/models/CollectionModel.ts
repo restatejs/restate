@@ -11,22 +11,28 @@ import type {
   MapAfterRequest,
 } from "types/models/CollectionModel";
 import type { AfterRequest } from "types/models/HTTPModel";
+import type { PickNumberOrStringKeys, ResourceEntity } from "types/resources";
 import type { Load } from "types/utils/load";
 
 import type { ComputedRef, Ref } from "vue";
 import { computed, ref } from "vue";
 
+import { CollectionResource } from "@/resources/CollectionResource";
+
 import { HTTPModel } from "./HTTPModel";
 
 class CollectionModel<
-  RI extends object,
-  Response extends object = RI
-> extends HTTPModel<RI> {
+  RI extends ResourceEntity,
+  PK extends PickNumberOrStringKeys<RI>,
+  Response extends ResourceEntity = RI
+> extends HTTPModel {
+  public readonly $resource: CollectionResource<RI, PK>;
+
   public readonly $primaryKey: string;
 
   protected readonly $computedProperties: ComputedProperties<RI>;
 
-  protected readonly $mapAfterRequest?: MapAfterRequest<Response, RI>;
+  protected readonly $mapAfterRequest?: MapAfterRequest<Response>;
 
   constructor({
     resourceName,
@@ -37,11 +43,11 @@ class CollectionModel<
   }: CollectionModelOptions<RI, Response>) {
     super({ resourceName, axios });
 
+    this.$resource = new CollectionResource();
+
     this.$primaryKey = primaryKey;
 
-    this.$computedProperties = new Map(
-      Object.entries(computedProperties)
-    ) as ComputedProperties<RI>;
+    this.$computedProperties = new Map(Object.entries(computedProperties));
 
     this.$mapAfterRequest = mapAfterRequest;
   }
@@ -53,7 +59,8 @@ class CollectionModel<
 
     if (filter || sort) {
       data = computed(() => {
-        let clonedData = [...data.value];
+        const originalData = this.$resource.getAll();
+        let clonedData = [...originalData.value];
 
         if (filter) {
           if (typeof filter === "function") {
@@ -85,7 +92,7 @@ class CollectionModel<
     return data;
   }
 
-  public item(id: string | number): Ref<RI | undefined> {
+  public item(id: RI[PK]): Ref<RI | undefined> {
     return this.$resource.get(id);
   }
 
@@ -122,10 +129,7 @@ class CollectionModel<
     );
   }
 
-  public show(
-    id: string | number,
-    options?: ShowOptions
-  ): Load<Ref<RI | undefined>> {
+  public show(id: RI[PK], options?: ShowOptions): Load<Ref<RI | undefined>> {
     const responseItem = this.$resource.get(id);
 
     const afterRequest: AfterRequest<Response> = (data) => {
@@ -151,7 +155,7 @@ class CollectionModel<
     data: P,
     options?: StoreOptions
   ): Load<ComputedRef<RI | undefined>> {
-    const responseItemId: Ref<string | number | null> = ref(null);
+    const responseItemId: Ref<RI[PK] | null> = ref(null);
 
     const responseItem: ComputedRef<RI | undefined> = computed(() => {
       if (responseItemId.value === null) return undefined;
@@ -185,13 +189,13 @@ class CollectionModel<
   }
 
   public update<D = Record<string, unknown>>(
-    id: string | number,
+    id: RI[PK],
     data: D,
     options?: UpdateOptions
   ): Load {
     const afterRequest = () => {
       Object.entries(data as any).forEach(([key, val]) => {
-        this.$resource.setProperty(id, key, val as string | number);
+        this.$resource.setProperty(id, key as any, val as any);
       });
     };
 
@@ -203,7 +207,7 @@ class CollectionModel<
     });
   }
 
-  public destroy(id: string | number, options?: DestroyOptions): Load {
+  public destroy(id: RI[PK], options?: DestroyOptions): Load {
     const afterRequest = () => this.$resource.delete(id);
 
     return this.request(`/${this.$resourceName}/${id}`, {
@@ -218,15 +222,15 @@ class CollectionModel<
       return;
     }
 
-    Reflect.set(data.value, "_insertedComputedProperties", true);
-
     this.$computedProperties.forEach((callback, prop) => {
-      if (prop in data.value) {
+      if (prop in (data.value as any)) {
         throw new Error(`The ${String(prop)} property is already defined.`);
       }
 
       data.value[prop] = computed(() => callback(data)) as any;
     });
+
+    Reflect.set(data.value, "_insertedComputedProperties", true);
   }
 }
 

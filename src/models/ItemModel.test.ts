@@ -1,7 +1,6 @@
 import axios from "axios";
 
-import type { Resource } from "..";
-
+import type { ItemResource } from "../resources/ItemResource";
 import { ItemModel } from "./ItemModel";
 
 interface UserEntity {
@@ -24,7 +23,7 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe("models/ItemModel", () => {
   let resourceName: string;
   let itemModel: ItemModel<UserEntity, UserResponse>;
-  let resource: Resource<UserEntity>;
+  let resource: ItemResource<UserEntity>;
 
   let itemA: () => UserResponse;
 

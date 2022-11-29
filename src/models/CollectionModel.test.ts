@@ -1,7 +1,6 @@
 import axios from "axios";
 
-import type { Resource } from "..";
-
+import type { CollectionResource } from "../resources/CollectionResource";
 import { CollectionModel } from "./CollectionModel";
 
 interface UserResponse {
@@ -15,7 +14,7 @@ interface UserEntity {
   id: number;
   name: string;
   age: number;
-  height: number;
+  height: string;
   agePlus2: number;
 }
 
@@ -25,8 +24,8 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe("models/CollectionModel", () => {
   let resourceName: string;
-  let collectionModel: CollectionModel<UserEntity, UserResponse>;
-  let resource: Resource<UserEntity>;
+  let collectionModel: CollectionModel<UserEntity, "id", UserResponse>;
+  let resource: CollectionResource<UserEntity, "id">;
 
   let itemA: () => UserResponse;
   let itemB: () => UserResponse;
@@ -38,7 +37,7 @@ describe("models/CollectionModel", () => {
 
   beforeAll(() => {
     resourceName = "user";
-    collectionModel = new CollectionModel<UserEntity, UserResponse>({
+    collectionModel = new CollectionModel<UserEntity, "id", UserResponse>({
       primaryKey: "id",
       resourceName,
       axios: mockedAxios,
@@ -213,7 +212,6 @@ describe("models/CollectionModel", () => {
     await collectionModel.index();
 
     const data = collectionModel.data();
-
     data.value.forEach((item) => {
       expect(item).toHaveProperty("id");
       expect(item).toHaveProperty("name");
@@ -224,5 +222,29 @@ describe("models/CollectionModel", () => {
       );
       expect(item).toHaveProperty("agePlus2", item ? plus2(item.age) : null);
     });
+
+    const sortedByAge = collectionModel.data({ sort: "age" });
+    expect(sortedByAge.value[0]).toHaveProperty("name", itemB().name);
+    expect(sortedByAge.value[1]).toHaveProperty("name", itemA().name);
+
+    const sortedByHeight = collectionModel.data({ sort: "height" });
+    expect(sortedByHeight.value[0]).toHaveProperty("name", itemA().name);
+    expect(sortedByHeight.value[1]).toHaveProperty("name", itemB().name);
+
+    const sortedByFunction = collectionModel.data({
+      sort: (a, b) => a.age - b.age,
+    });
+    expect(sortedByFunction.value[0]).toHaveProperty("name", itemB().name);
+    expect(sortedByFunction.value[1]).toHaveProperty("name", itemA().name);
+
+    const filterByAge = collectionModel.data({
+      filter: (item) => item.age <= 20,
+    });
+    expect(filterByAge.value[0]).toHaveProperty("name", itemB().name);
+
+    const filterByHeight = collectionModel.data({
+      filter: (item) => parseFloat(item.height) <= 1.55,
+    });
+    expect(filterByHeight.value[0]).toHaveProperty("name", itemA().name);
   });
 });

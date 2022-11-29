@@ -6,23 +6,25 @@ import type {
   ComputedProperties,
   MapAfterRequest,
 } from "types/models/ItemModel";
+import type { ResourceEntity } from "types/resources";
 import type { Load } from "types/utils/load";
 
-import type { Axios } from "axios";
 import type { Ref } from "vue";
 import { computed } from "vue";
+
+import { ItemResource } from "@/resources/ItemResource";
 
 import { HTTPModel } from "./HTTPModel";
 
 class ItemModel<
-  RI extends object,
-  Response extends object = RI
-> extends HTTPModel<RI> {
-  public readonly $axios: Axios;
+  RI extends ResourceEntity,
+  Response extends ResourceEntity = RI
+> extends HTTPModel {
+  protected readonly $resource: ItemResource<RI>;
 
   protected readonly $computedProperties: ComputedProperties<RI>;
 
-  protected readonly $mapAfterRequest?: MapAfterRequest<Response, RI>;
+  protected readonly $mapAfterRequest?: MapAfterRequest<Response>;
 
   constructor({
     resourceName,
@@ -32,26 +34,24 @@ class ItemModel<
   }: ItemModelOptions<RI, Response>) {
     super({ resourceName, axios });
 
-    this.$axios = axios;
+    this.$resource = new ItemResource();
 
-    this.$computedProperties = new Map(
-      Object.entries(computedProperties)
-    ) as ComputedProperties<RI>;
+    this.$computedProperties = new Map(Object.entries(computedProperties));
 
     this.$mapAfterRequest = mapAfterRequest;
   }
 
   public data(): Ref<RI | undefined> {
-    return this.$resource.get(this.$resourceName);
+    return this.$resource.get();
   }
 
   public show(options?: ShowOptions): Load<Ref<RI | undefined>> {
-    const responseItem = this.$resource.get(this.$resourceName);
+    const responseItem = this.$resource.get();
 
     const afterRequest: AfterRequest<Response> = (data) => {
       const mappedData = this.$mapAfterRequest?.(data) ?? data;
 
-      this.$resource.set(this.$resourceName, mappedData as RI);
+      this.$resource.set(mappedData as RI);
 
       this.$insertComputedProperties(responseItem as Ref<RI>);
     };
@@ -70,11 +70,7 @@ class ItemModel<
   public update(data: Partial<RI>, options?: UpdateOptions): Load {
     const afterRequest: AfterRequest<RI> = () => {
       Object.entries(data).forEach(([key, val]) => {
-        this.$resource.setProperty(
-          this.$resourceName,
-          key,
-          val as string | number
-        );
+        this.$resource.setProperty(key, val as any);
       });
     };
 

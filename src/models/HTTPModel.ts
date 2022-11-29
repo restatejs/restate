@@ -9,16 +9,15 @@ import type { Axios } from "axios";
 
 import { load } from "@/utils/load";
 
-import { CoreModel } from "./CoreModel";
+class HTTPModel {
+  public readonly $resourceName: string;
 
-class HTTPModel<RI extends object> extends CoreModel<RI> {
   public readonly $axios: Axios;
 
   protected $afterRequest?: AfterRequest;
 
   constructor({ resourceName, axios, afterRequest }: HTTPModelOptions) {
-    super(resourceName);
-
+    this.$resourceName = resourceName;
     this.$axios = axios;
     this.$afterRequest = afterRequest;
   }
