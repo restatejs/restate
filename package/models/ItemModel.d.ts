@@ -8,7 +8,7 @@ export type ComputedProperty<RI, Return = unknown> = (item: Ref<RI>) => Return;
 
 export type ComputedProperties<RI> = Map<keyof RI, ComputedProperty<RI>>;
 
-export type MapAfterRequest<Response, RI> = (item: Response) => unknown;
+export type MapAfterRequest<Response> = (item: Response) => unknown;
 
 export interface ItemModelOptions<RI, Response> {
   resourceName: string;
@@ -16,7 +16,7 @@ export interface ItemModelOptions<RI, Response> {
   computedProperties?: {
     [Prop in keyof RI]?: ComputedProperty<RI, RI[Prop]>;
   };
-  mapAfterRequest?: MapAfterRequest<Response, RI>;
+  mapAfterRequest?: MapAfterRequest<Response>;
 }
 
 export interface BaseOptions {
