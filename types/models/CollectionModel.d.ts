@@ -1,6 +1,8 @@
 import type { Axios } from "axios";
 import type { ComputedRef, Ref } from "vue";
 
+import type { PickNumberOrStringKeys, ResourceEntity } from "../resources";
+import type { CollectionResource } from "../resources/CollectionResource";
 import type { Load } from "../utils/load";
 import { HTTPModel } from "./HTTPModel";
 

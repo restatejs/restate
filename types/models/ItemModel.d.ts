@@ -1,6 +1,8 @@
 import type { Axios } from "axios";
 import type { Ref } from "vue";
 
+import type { ResourceEntity } from "../resources";
+import type { ItemResource } from "../resources/ItemResource";
 import type { Load } from "../utils/load";
 import { HTTPModel } from "./HTTPModel";
 
