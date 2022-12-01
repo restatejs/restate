@@ -52,7 +52,9 @@ class CollectionModel<
     this.$mapAfterRequest = mapAfterRequest;
   }
 
-  public data(options?: CollectionModelDataOptions<RI>): ComputedRef<RI[]> {
+  public data(
+    options?: CollectionModelDataOptions<RI>
+  ): ComputedRef<(RI | undefined)[]> {
     const { sort, filter } = options ?? {};
 
     let data = this.$resource.getAll();
@@ -77,10 +79,11 @@ class CollectionModel<
         }
 
         if (sort) {
-          const callback: ArrayCompareFn<RI> =
+          const callback: ArrayCompareFn<RI | undefined> =
             typeof sort === "function"
               ? sort
-              : (a: RI, b: RI) => `${a[sort]}`.localeCompare(`${b[sort]}`);
+              : (a: RI | undefined, b: RI | undefined) =>
+                  `${a?.[sort]}`.localeCompare(`${b?.[sort]}`);
 
           clonedData.sort(callback);
         }
@@ -96,7 +99,7 @@ class CollectionModel<
     return this.$resource.get(id);
   }
 
-  public index(options?: IndexOptions): Load<ComputedRef<RI[]>> {
+  public index(options?: IndexOptions): Load<ComputedRef<(RI | undefined)[]>> {
     const responseItems = this.$resource.getAll();
 
     const afterRequest: AfterRequest<Response[]> = (data) => {
@@ -135,9 +138,11 @@ class CollectionModel<
     const afterRequest: AfterRequest<Response> = (data) => {
       const mappedData = this.$mapAfterRequest?.(data) ?? data;
 
-      this.$resource.set(id, mappedData as unknown as RI);
+      const settedItem = this.$resource.set(id, mappedData as unknown as RI);
 
-      this.$insertComputedProperties(responseItem as Ref<RI>);
+      this.$insertComputedProperties(settedItem);
+
+      responseItem.value = settedItem;
     };
 
     return this.request(
@@ -217,20 +222,20 @@ class CollectionModel<
     });
   }
 
-  private $insertComputedProperties(data: Ref<RI>): void {
-    if (Reflect.get(data.value, "_insertedComputedProperties")) {
+  private $insertComputedProperties(data: RI | undefined): void {
+    if (!data || Reflect.get(data, "_insertedComputedProperties")) {
       return;
     }
 
     this.$computedProperties.forEach((callback, prop) => {
-      if (prop in (data.value as any)) {
+      if (prop in (data as any)) {
         throw new Error(`The ${String(prop)} property is already defined.`);
       }
 
-      data.value[prop] = computed(() => callback(data)) as any;
+      data[prop] = computed(() => callback(data)) as any;
     });
 
-    Reflect.set(data.value, "_insertedComputedProperties", true);
+    Reflect.set(data, "_insertedComputedProperties", true);
   }
 }
 

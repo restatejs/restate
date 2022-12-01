@@ -42,7 +42,7 @@ describe("models/CollectionModel", () => {
       resourceName,
       axios: mockedAxios,
       computedProperties: {
-        agePlus2: (item) => item.value.age + 2,
+        agePlus2: (item) => item.age + 2,
       },
       mapAfterRequest: (item) => {
         item.height = addMeter(item.height) as any;
@@ -92,6 +92,8 @@ describe("models/CollectionModel", () => {
     await loaded;
 
     data.value.forEach((item) => {
+      if (!item) throw new Error();
+
       expect(item).toHaveProperty("id");
       expect(item).toHaveProperty("name");
       expect(item).toHaveProperty("age");
@@ -213,6 +215,8 @@ describe("models/CollectionModel", () => {
 
     const data = collectionModel.data();
     data.value.forEach((item) => {
+      if (!item) throw new Error();
+
       expect(item).toHaveProperty("id");
       expect(item).toHaveProperty("name");
       expect(item).toHaveProperty("age");
@@ -232,18 +236,19 @@ describe("models/CollectionModel", () => {
     expect(sortedByHeight.value[1]).toHaveProperty("name", itemB().name);
 
     const sortedByFunction = collectionModel.data({
-      sort: (a, b) => a.age - b.age,
+      sort: (a, b) => (a?.age && b?.age ? a.age - b.age : 0),
     });
     expect(sortedByFunction.value[0]).toHaveProperty("name", itemB().name);
     expect(sortedByFunction.value[1]).toHaveProperty("name", itemA().name);
 
     const filterByAge = collectionModel.data({
-      filter: (item) => item.age <= 20,
+      filter: (item) => (item?.age ? item.age <= 20 : false),
     });
     expect(filterByAge.value[0]).toHaveProperty("name", itemB().name);
 
     const filterByHeight = collectionModel.data({
-      filter: (item) => parseFloat(item.height) <= 1.55,
+      filter: (item) =>
+        item?.height ? parseFloat(item.height) <= 1.55 : false,
     });
     expect(filterByHeight.value[0]).toHaveProperty("name", itemA().name);
   });

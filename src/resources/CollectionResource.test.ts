@@ -51,7 +51,7 @@ describe("CollectionResource", () => {
 
     const refCamila = resource.set(1, camila);
 
-    expect(state.data[1]).toEqual(refCamila.value);
+    expect(state.data[1]).toEqual(refCamila);
     expect(state.data[1]).toEqual(camila);
   });
 

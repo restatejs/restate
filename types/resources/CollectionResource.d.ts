@@ -1,4 +1,4 @@
-import type { ComputedRef, Ref } from "vue";
+import type { ComputedRef } from "vue";
 
 import type { ResourceEntity, PickNumberOrStringKeys } from ".";
 
@@ -13,19 +13,19 @@ export declare class CollectionResource<
   RI extends ResourceEntity,
   PK extends PickNumberOrStringKeys<RI>
 > {
-  public state: ResourceCollectionState<RI, PK>;
+  protected state: ResourceCollectionState<RI, PK>;
 
-  public get(id: RI[PK]): Ref<RI | undefined>;
+  public get(id: RI[PK]): Ref<Readonly<RI> | undefined>;
 
-  public getAll(): ComputedRef<RI[]>;
+  public getAll(): ComputedRef<(RI | undefined)[]>;
 
-  public set(id: RI[PK], data: RI): Ref<RI>;
+  public set(id: RI[PK], data: RI): Readonly<RI>;
 
   public setProperty<P extends string & keyof RI>(
     id: RI[PK],
     prop: P,
     value: RI[P]
-  ): Ref<RI>;
+  ): Readonly<RI>;
 
   public has(id: RI[PK]): boolean;
 

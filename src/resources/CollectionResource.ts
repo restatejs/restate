@@ -2,19 +2,19 @@ import type { PickNumberOrStringKeys, ResourceEntity } from "types/resources";
 import type { ResourceCollectionState } from "types/resources/CollectionResource";
 
 import type { ComputedRef, Ref } from "vue";
-import { toRef, reactive, computed } from "vue";
+import { toRef, computed, reactive } from "vue";
 
 class CollectionResource<
   RI extends ResourceEntity,
   PK extends PickNumberOrStringKeys<RI>
 > {
-  public state: ResourceCollectionState<RI, PK>;
+  protected state: ResourceCollectionState<RI, PK>;
 
   constructor() {
     this.state = reactive({ data: {} }) as ResourceCollectionState<RI, PK>;
   }
 
-  public get(id: RI[PK]): Ref<RI | undefined> {
+  public get(id: RI[PK]): Ref<Readonly<RI> | undefined> {
     const item = this.state.data[id];
 
     if (!item) {
@@ -24,27 +24,25 @@ class CollectionResource<
     return toRef(this.state.data, id);
   }
 
-  public getAll(): ComputedRef<RI[]> {
-    const computedCollection = computed(() => {
-      const collection = Object.values(this.state.data);
+  public getAll(): ComputedRef<(RI | undefined)[]> {
+    const items = computed(() =>
+      Object.values<RI | undefined>(this.state.data)
+    );
 
-      return collection as RI[];
-    });
-
-    return computedCollection;
+    return items;
   }
 
-  public set(id: RI[PK], data: RI): Ref<RI> {
+  public set(id: RI[PK], data: RI): Readonly<RI> {
     this.state.data[id] = data;
 
-    return toRef(this.state.data, id) as Ref<RI>;
+    return this.state.data[id] as Readonly<RI>;
   }
 
   public setProperty<P extends string & keyof RI>(
     id: RI[PK],
     prop: P,
     value: RI[P]
-  ): Ref<RI> {
+  ): Readonly<RI> {
     const item = this.state.data[id];
 
     if (!item) {
@@ -53,7 +51,7 @@ class CollectionResource<
 
     item[prop] = value;
 
-    return toRef(this.state.data, id) as Ref<RI>;
+    return this.state.data[id] as Readonly<RI>;
   }
 
   public has(id: RI[PK]): boolean {
