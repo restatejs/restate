@@ -49,26 +49,24 @@ export interface DataOptions<RI> {
 
 export declare class CollectionModel<
   RI extends ResourceEntity,
-  PK extends PickNumberOrStringKeys<RI>,
-  Raw extends ResourceEntity = RI
+  Raw extends ResourceEntity = RI,
+  PK extends PickNumberOrStringKeys<Raw> = PickNumberOrStringKeys<Raw>
 > extends HTTPModel {
-  public readonly $resource: CollectionResource<RI, PK>;
+  protected readonly $resource: CollectionResource<RI, Raw, PK>;
 
-  public readonly $primaryKey: string;
-
-  protected readonly $computedProperties: ComputedProperties<RI>;
+  protected readonly $primaryKey: PK;
 
   protected readonly $mapAfterRequest?: MapAfterRequest<Raw>;
 
   constructor(options: CollectionModelOptions<RI, Raw, PK>);
 
-  public data(options?: DataOptions<RI>): ComputedRef<(RI | undefined)[]>;
+  public data(options?: DataOptions<RI>): State<RI>;
 
-  public item(id: RI[PK]): ComputedRef<RI | undefined>;
+  public item(id: Raw[PK]): ComputedRef<RI | undefined>;
 
-  public index(options?: IndexOptions): Load<ComputedRef<(RI | undefined)[]>>;
+  public index(options?: IndexOptions): Load<ComputedState<RI>>;
 
-  public show(id: RI[PK], options?: ShowOptions): Load<Ref<RI | undefined>>;
+  public show(id: Raw[PK], options?: ShowOptions): Load<Ref<RI | undefined>>;
 
   public store<P = Record<string, unknown>>(
     data: P,
@@ -76,12 +74,10 @@ export declare class CollectionModel<
   ): Load<ComputedRef<RI | undefined>>;
 
   public update<D = Record<string, unknown>>(
-    id: RI[PK],
+    id: Raw[PK],
     data: D,
     options?: UpdateOptions
   ): Load;
 
-  public destroy(id: RI[PK], options?: DestroyOptions): Load;
-
-  private $insertComputedProperties(data: RI | undefined): void;
+  public destroy(id: Raw[PK], options?: DestroyOptions): Load;
 }
