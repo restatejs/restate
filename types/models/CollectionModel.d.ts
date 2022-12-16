@@ -64,7 +64,7 @@ export declare class CollectionModel<
 
   public data(options?: DataOptions<RI>): ComputedRef<(RI | undefined)[]>;
 
-  public item(id: RI[PK]): Ref<RI | undefined>;
+  public item(id: RI[PK]): ComputedRef<RI | undefined>;
 
   public index(options?: IndexOptions): Load<ComputedRef<(RI | undefined)[]>>;
 

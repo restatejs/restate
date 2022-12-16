@@ -93,7 +93,7 @@ class CollectionModel<
     return data;
   }
 
-  public item(id: Raw[PK]): Ref<RI | undefined> {
+  public item(id: Raw[PK]): ComputedRef<RI | undefined> {
     return this.$resource.get(id);
   }
 
@@ -154,12 +154,11 @@ class CollectionModel<
     const afterRequest: AfterRequest<Raw> = (responseData) => {
       const mappedData = this.$mapAfterRequest?.(responseData) ?? responseData;
 
-      const item = this.$resource.set(
-        (data as any)[this.$primaryKey],
-        mappedData as unknown as Raw
-      );
+      const itemId = (data as any)[this.$primaryKey];
 
-      responseItemId.value = (data as any)[this.$primaryKey];
+      this.$resource.set(itemId, mappedData as unknown as Raw);
+
+      responseItemId.value = itemId;
     };
 
     return this.request(
