@@ -1,25 +1,23 @@
 import type { Axios } from "axios";
 import type { ComputedRef, Ref } from "vue";
 
-import type { PickNumberOrStringKeys, ResourceEntity } from "../resources";
+import type {
+  ComputedProperties,
+  PickNumberOrStringKeys,
+  ResourceEntity,
+} from "../resources";
 import type { CollectionResource } from "../resources/CollectionResource";
 import type { Load } from "../utils/load";
 import { HTTPModel } from "./HTTPModel";
 
-export type ComputedProperty<RI, Return = unknown> = (item: RI) => Return;
+export type MapAfterRequest<Raw> = (item: Raw) => unknown;
 
-export type ComputedProperties<RI> = Map<keyof RI, ComputedProperty<RI>>;
-
-export type MapAfterRequest<Response> = (item: Response) => unknown;
-
-export interface CollectionModelOptions<RI, Response, PK> {
+export interface CollectionModelOptions<RI, Raw, PK> {
   resourceName: string;
   axios: Axios;
   primaryKey: PK;
-  computedProperties?: {
-    [Prop in keyof RI]?: ComputedProperty<RI, RI[Prop]>;
-  };
-  mapAfterRequest?: MapAfterRequest<Response>;
+  computedProperties?: ComputedProperties<RI>;
+  mapAfterRequest?: MapAfterRequest<Raw>;
 }
 
 export interface BaseOptions {
@@ -42,15 +40,17 @@ export type ArrayCompareFn<O> = (a: O, b: O) => number;
 
 export type ArrayFilterFn<O> = (value: O, index: number, array: O[]) => boolean;
 
-export interface CollectionModelDataOptions<RI> {
-  sort?: keyof RI | ArrayCompareFn<RI | undefined>;
-  filter?: ArrayFilterFn<RI | undefined> | ArrayFilterFn<RI | undefined>[];
+export interface DataOptions<RI> {
+  sort?: keyof RI | ArrayCompareFn<{ data: RI } | undefined>;
+  filter?:
+    | ArrayFilterFn<{ data: RI } | undefined>
+    | ArrayFilterFn<{ data: RI } | undefined>[];
 }
 
 export declare class CollectionModel<
   RI extends ResourceEntity,
   PK extends PickNumberOrStringKeys<RI>,
-  Response extends ResourceEntity = RI
+  Raw extends ResourceEntity = RI
 > extends HTTPModel {
   public readonly $resource: CollectionResource<RI, PK>;
 
@@ -58,15 +58,13 @@ export declare class CollectionModel<
 
   protected readonly $computedProperties: ComputedProperties<RI>;
 
-  protected readonly $mapAfterRequest?: MapAfterRequest<Response>;
+  protected readonly $mapAfterRequest?: MapAfterRequest<Raw>;
 
-  constructor(options: CollectionModelOptions<RI, Response, PK>);
+  constructor(options: CollectionModelOptions<RI, Raw, PK>);
 
-  public data(
-    options?: CollectionModelDataOptions<RI>
-  ): ComputedRef<(RI | undefined)[]>;
+  public data(options?: DataOptions<RI>): ComputedRef<(RI | undefined)[]>;
 
-  public item(id: RI[PK]): Ref<RI | undefined>;
+  public item(id: RI[PK]): ComputedRef<RI | undefined>;
 
   public index(options?: IndexOptions): Load<ComputedRef<(RI | undefined)[]>>;
 

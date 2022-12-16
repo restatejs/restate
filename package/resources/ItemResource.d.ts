@@ -1,20 +1,39 @@
-import type { Ref } from "vue";
+import type { ComputedRef, Ref } from "vue";
 
 import type { ResourceEntity } from ".";
 
-export type ResourceItemState<RI extends ResourceEntity> = Ref<RI | undefined>;
+export type State<RI extends ResourceEntity> = Ref<RI | undefined>;
 
-export declare class ItemResource<RI extends ResourceEntity> {
-  public state: ResourceItemState<RI>;
+export type ComputedState<RI extends ResourceEntity> = ComputedRef<
+  RI | undefined
+>;
 
-  public get(): ResourceItemState<RI>;
+export interface ItemResourceOptions<
+  RI extends ResourceEntity,
+  Raw extends ResourceEntity = RI
+> {
+  state: State<Raw>;
+  computedState: ComputedState<RI>;
+}
 
-  public set(data: RI): Ref<RI>;
+export declare class ItemResource<
+  RI extends ResourceEntity,
+  Raw extends ResourceEntity = RI
+> {
+  protected $state: State<Raw>;
 
-  public setProperty<P extends string & keyof RI>(
+  protected readonly $computedState: ComputedState<RI>;
+
+  constructor(options: ItemResourceOptions<RI, Raw>);
+
+  public get(): ComputedState<Raw>;
+
+  public set(data: Raw): void;
+
+  public setProperty<P extends string & keyof Raw>(
     prop: P,
-    value: RI[P]
-  ): Ref<RI>;
+    value: Raw[P]
+  ): void;
 
   public has(): boolean;
 

@@ -20,14 +20,6 @@ module.exports = {
       import: "./src/models/ItemModel.ts",
       filename: "models/ItemModel.js",
     },
-    collectionResource: {
-      import: "./src/resources/CollectionResource.ts",
-      filename: "resources/CollectionResource.js",
-    },
-    itemResource: {
-      import: "./src/resources/ItemResource.ts",
-      filename: "resources/ItemResource.js",
-    },
     loadUtil: {
       import: "./src/utils/load.ts",
       filename: "utils/load.js",
