@@ -36,7 +36,7 @@ describe("models/ItemModel", () => {
       resourceName,
       axios: mockedAxios,
       computedProperties: {
-        agePlus2: (item) => plus2(item.value.age),
+        agePlus2: (item) => plus2(item.age),
       },
       mapAfterRequest: (item) => {
         item.height = addMeter(item.height) as any;

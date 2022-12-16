@@ -1,69 +1,124 @@
 import type { PickNumberOrStringKeys, ResourceEntity } from "types/resources";
-import type { ResourceCollectionState } from "types/resources/CollectionResource";
+import type {
+  CollectionResourceOptions,
+  ComputedState,
+  SetAllOptions,
+  State,
+} from "types/resources/CollectionResource";
+import type { Indexes } from "types/resources/Indexes";
 
-import type { ComputedRef, Ref } from "vue";
-import { toRef, computed, reactive } from "vue";
+import type { ComputedRef } from "vue";
+import { computed } from "vue";
 
 class CollectionResource<
   RI extends ResourceEntity,
-  PK extends PickNumberOrStringKeys<RI>
+  Raw extends ResourceEntity = RI,
+  PK extends PickNumberOrStringKeys<Raw> = PickNumberOrStringKeys<Raw>
 > {
-  protected state: ResourceCollectionState<RI, PK>;
+  protected readonly $primaryKey: PK;
 
-  constructor() {
-    this.state = reactive({ data: {} }) as ResourceCollectionState<RI, PK>;
+  protected $indexes: Indexes<Raw[PK]>;
+
+  protected $state: State<Raw>;
+
+  protected readonly $computedState: ComputedState<RI>;
+
+  constructor({
+    primaryKey,
+    indexes,
+    state,
+    computedState,
+  }: CollectionResourceOptions<RI, Raw, PK>) {
+    this.$primaryKey = primaryKey;
+    this.$indexes = indexes;
+    this.$state = state;
+    this.$computedState = computedState;
   }
 
-  public get(id: RI[PK]): Ref<Readonly<RI> | undefined> {
-    const item = this.state.data[id];
+  public get(id: Raw[PK]): ComputedRef<RI | undefined> {
+    const itemComputed = computed(() => {
+      const index = this.$indexes.get(id);
 
-    if (!item) {
-      this.state.data[id] = undefined;
+      return index !== undefined
+        ? this.$computedState.value[index].data
+        : undefined;
+    });
+
+    return itemComputed;
+  }
+
+  public getAll(): ComputedState<RI> {
+    return this.$computedState;
+  }
+
+  public set(id: Raw[PK], data: Raw): number {
+    let index = this.$indexes.get(id);
+
+    if (index === undefined) {
+      index = this.$state.value.length;
+      this.$indexes.set(id, index);
+      this.$state.value[index] = { data };
+    } else {
+      this.$state.value[index].data = data;
     }
 
-    return toRef(this.state.data, id);
+    return index;
   }
 
-  public getAll(): ComputedRef<(RI | undefined)[]> {
-    const items = computed(() =>
-      Object.values<RI | undefined>(this.state.data)
-    );
+  public setAll(collection: Raw[], options?: SetAllOptions): void {
+    if (options?.clear === false) {
+      this.$indexes.setAll(
+        collection.map((item, index) => [item[this.$primaryKey], index]),
+        { clear: false }
+      );
+    } else {
+      this.clear();
+      this.$indexes.setAll(
+        collection.map((item, index) => [item[this.$primaryKey], index])
+      );
+    }
 
-    return items;
+    this.$state.value = collection.map((item) => ({ data: item }));
   }
 
-  public set(id: RI[PK], data: RI): Readonly<RI> {
-    this.state.data[id] = data;
-
-    return this.state.data[id] as Readonly<RI>;
-  }
-
-  public setProperty<P extends string & keyof RI>(
-    id: RI[PK],
+  public setProperty<P extends string & keyof Raw>(
+    id: Raw[PK],
     prop: P,
-    value: RI[P]
-  ): Readonly<RI> {
-    const item = this.state.data[id];
+    value: Raw[P]
+  ): void {
+    const index = this.$indexes.get(id);
 
-    if (!item) {
+    if (index === undefined) {
       throw new Error("Property not updated.");
     }
 
-    item[prop] = value;
+    const item = this.$state.value[index];
 
-    return this.state.data[id] as Readonly<RI>;
+    if (item.data === undefined) {
+      throw new Error("Property not updated.");
+    }
+
+    item.data[prop] = value;
   }
 
-  public has(id: RI[PK]): boolean {
-    return id in this.state.data;
+  public has(id: Raw[PK]): boolean {
+    return this.$indexes.has(id);
   }
 
-  public delete(id: RI[PK]): void {
-    delete this.state.data[id];
+  public delete(id: Raw[PK]): void {
+    const index = this.$indexes.get(id);
+
+    if (index === undefined) {
+      throw new Error("Item not removed.");
+    }
+
+    this.$state.value.splice(index, 1);
+    this.$indexes.delete(id);
   }
 
   public clear(): void {
-    this.state.data = {} as Record<RI[PK], RI | undefined>;
+    this.$indexes.clear();
+    this.$state.value = [];
   }
 }
 

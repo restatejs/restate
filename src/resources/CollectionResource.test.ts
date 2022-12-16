@@ -1,8 +1,7 @@
-import type { ResourceCollectionState } from "types/resources/CollectionResource";
+import type { CollectionResource } from "./CollectionResource";
+import { useCollectionResource } from "./useCollectionResource";
 
-import { CollectionResource } from "./CollectionResource";
-
-interface User {
+interface UserResponse {
   id: number;
   name: string;
   age: number;
@@ -10,14 +9,18 @@ interface User {
   past?: boolean;
 }
 
-const camila: User = {
+interface UserEntity extends UserResponse {
+  agePlus2: number;
+}
+
+const camila: UserResponse = {
   id: 1,
   name: "Camila",
   age: 21,
   height: 1.54,
 };
 
-const deborah: User = {
+const deborah: UserResponse = {
   id: 2,
   name: "Deborah",
   age: 20,
@@ -25,13 +28,30 @@ const deborah: User = {
 };
 
 describe("CollectionResource", () => {
-  let resource: CollectionResource<User, "id">;
-  let state: ResourceCollectionState<User, "id">;
+  let resource: CollectionResource<UserEntity, UserResponse>;
+
+  let plus2: (num: number) => number;
+  let toMatchUserEntity: (
+    expectedUser: { value: UserEntity | undefined },
+    responseUser: UserResponse
+  ) => void;
 
   beforeAll(() => {
-    resource = new CollectionResource<User, "id">();
+    resource = useCollectionResource<UserEntity, UserResponse>({
+      primaryKey: "id",
+      computedProperties: {
+        agePlus2: (item) => plus2(item.age),
+      },
+    });
 
-    state = Reflect.get(resource, "state");
+    plus2 = (num) => num + 2;
+    toMatchUserEntity = (expectedUser, responseUser) => {
+      expect(expectedUser.value).toMatchObject(responseUser);
+      expect(expectedUser.value).toHaveProperty(
+        "agePlus2",
+        expectedUser.value && plus2(expectedUser.value.age)
+      );
+    };
   });
 
   beforeEach(() => {
@@ -39,68 +59,132 @@ describe("CollectionResource", () => {
   });
 
   test("should be able to execute the get function", () => {
-    expect(resource.get(1).value).toBe(undefined);
+    const item = resource.get(camila.id);
+    expect(item.value).toBe(undefined);
 
-    resource.set(1, camila);
+    resource.set(camila.id, { ...camila });
 
-    expect(resource.get(1).value).toEqual(camila);
-  });
+    const settedItem = resource.get(camila.id);
 
-  test("should be able to execute the set function", () => {
-    expect(state.data[1]).toBe(undefined);
-
-    const refCamila = resource.set(1, camila);
-
-    expect(state.data[1]).toEqual(refCamila);
-    expect(state.data[1]).toEqual(camila);
+    [item, settedItem].forEach((target) => {
+      expect(target.value).toMatchObject(camila);
+      expect(target.value).toHaveProperty(
+        "agePlus2",
+        target.value && plus2(target.value.age)
+      );
+    });
   });
 
   test("should be able to execute the getAll function", () => {
-    resource.set(1, camila);
-    resource.set(2, deborah);
+    const items = resource.getAll();
+    expect(items.value).toEqual([]);
 
-    const resourceCollection = resource.getAll().value;
+    const users = [{ ...camila }, { ...deborah }];
+    resource.setAll(users);
 
-    expect(resourceCollection).toEqual([camila, deborah]);
+    const settedItems = resource.getAll();
+
+    [items, settedItems].forEach((targets) => {
+      targets.value.forEach((item, i) =>
+        toMatchUserEntity({ value: item.data }, users[i])
+      );
+    });
+  });
+
+  test("should be able to execute the set function", () => {
+    const items = resource.getAll();
+    expect(items.value.length).toBe(0);
+
+    const item = resource.get(camila.id);
+    expect(item.value).toBe(undefined);
+
+    resource.set(camila.id, { ...camila });
+
+    expect(items.value.length).toBe(1);
+    toMatchUserEntity(item, camila);
+  });
+
+  test("should be able to execute the setAll function", () => {
+    const items = resource.getAll();
+    expect(items.value.length).toBe(0);
+
+    const itemA = resource.get(camila.id);
+    const itemB = resource.get(deborah.id);
+
+    expect(itemA.value).toBe(undefined);
+    expect(itemB.value).toBe(undefined);
+
+    resource.setAll([camila, deborah]);
+
+    expect(items.value.length).toBe(2);
+
+    toMatchUserEntity(itemA, camila);
+    toMatchUserEntity(itemB, deborah);
+
+    toMatchUserEntity(resource.get(camila.id), camila);
+    toMatchUserEntity(resource.get(deborah.id), deborah);
   });
 
   test("should be able to execute the setProperty function", () => {
-    resource.set(1, { ...camila });
+    resource.set(camila.id, { ...camila });
 
-    expect(state.data[1]?.past).toBe(undefined);
+    const item = resource.get(camila.id);
 
-    resource.setProperty(1, "past", true);
+    expect(item.value?.past).toBe(undefined);
 
-    expect(state.data[1]?.past).toBe(true);
+    resource.setProperty(camila.id, "past", true);
 
-    expect(() => resource.setProperty(2, "past", true)).toThrow();
+    expect(item.value?.past).toBe(true);
+
+    expect(() => resource.setProperty(deborah.id, "past", true)).toThrow();
   });
 
   test("should be able to execute the has function", () => {
-    expect(resource.has(1)).toBe(false);
+    expect(resource.has(camila.id)).toBe(false);
 
-    resource.set(1, camila);
+    resource.set(camila.id, camila);
 
-    expect(resource.has(1)).toBe(true);
+    expect(resource.has(camila.id)).toBe(true);
   });
 
   test("should be able to execute the delete function", () => {
-    resource.set(1, camila);
+    resource.set(camila.id, camila);
+    const item = resource.get(camila.id);
+    const items = resource.getAll();
 
-    expect(state.data[1]).not.toBe(undefined);
+    expect(item.value).not.toBe(undefined);
 
-    resource.delete(1);
+    resource.delete(camila.id);
 
-    expect(state.data[1]).toBe(undefined);
+    expect(item.value).toBe(undefined);
+    expect(resource.get(camila.id).value).toBe(undefined);
+
+    expect(items.value).toEqual([]);
+    expect(resource.getAll().value).toEqual([]);
   });
 
   test("should be able to execute the clear function", () => {
-    resource.set(1, camila);
+    const users = [{ ...camila }, { ...deborah }];
+    resource.setAll(users);
 
-    expect(state.data).not.toEqual({});
+    const items = resource.getAll();
+    const itemA = resource.get(camila.id);
+    const itemB = resource.get(deborah.id);
+
+    items.value.forEach((item, i) =>
+      toMatchUserEntity({ value: item.data }, users[i])
+    );
+    toMatchUserEntity(itemA, camila);
+    toMatchUserEntity(itemB, deborah);
 
     resource.clear();
 
-    expect(state.data).toEqual({});
+    expect(items.value).toEqual([]);
+    expect(itemA.value).toBe(undefined);
+    expect(itemB.value).toBe(undefined);
+
+    expect(resource.getAll().value).toEqual([]);
+    expect(resource.get(camila.id).value).toBe(undefined);
+    expect(resource.get(deborah.id).value).toBe(undefined);
   });
 });

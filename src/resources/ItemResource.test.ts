@@ -1,29 +1,49 @@
-import type { ResourceItemState } from "types/resources/ItemResource";
+import type { ItemResource } from "./ItemResource";
+import { useItemResource } from "./useItemResource";
 
-import { ItemResource } from "./ItemResource";
-
-interface User {
-  id: number;
+interface UserResponse {
   name: string;
   age: number;
   height: number;
   past?: boolean;
 }
 
-const camila: User = {
-  id: 1,
-  name: "Camila",
-  age: 21,
-  height: 1.54,
-};
+interface UserEntity extends UserResponse {
+  agePlus2: number;
+}
 
 describe("ItemResource", () => {
-  let resource: ItemResource<User>;
-  let state: ResourceItemState<User>;
+  let resource: ItemResource<UserEntity, UserResponse>;
+
+  let createItem: () => UserResponse;
+
+  let plus2: (num: number) => number;
+  let toMatchUserEntity: (
+    expectedUser: { value: UserEntity | undefined },
+    responseUser: UserResponse
+  ) => void;
 
   beforeAll(() => {
-    resource = new ItemResource<User>();
-    state = Reflect.get(resource, "state");
+    resource = useItemResource<UserEntity, UserResponse>({
+      computedProperties: {
+        agePlus2: (item) => plus2(item.age),
+      },
+    });
+
+    createItem = () => ({
+      name: "Camila",
+      age: 21,
+      height: 1.54,
+    });
+
+    plus2 = (num) => num + 2;
+    toMatchUserEntity = (expectedUser, responseUser) => {
+      expect(expectedUser.value).toMatchObject(responseUser);
+      expect(expectedUser.value).toHaveProperty(
+        "agePlus2",
+        expectedUser.value && plus2(expectedUser.value.age)
+      );
+    };
   });
 
   beforeEach(() => {
@@ -31,30 +51,30 @@ describe("ItemResource", () => {
   });
 
   test("should be able to execute the get function", () => {
-    expect(resource.get().value).toBe(undefined);
+    const item = resource.get();
 
-    resource.set(camila);
+    resource.set(createItem());
 
-    expect(resource.get().value).toEqual(camila);
+    toMatchUserEntity(item, createItem());
+    toMatchUserEntity(resource.get(), createItem());
   });
 
   test("should be able to execute the set function", () => {
-    expect(state.value).toBe(undefined);
+    resource.set(createItem());
 
-    const refCamila = resource.set(camila);
-
-    expect(state.value).toEqual(refCamila.value);
-    expect(state.value).toEqual(camila);
+    toMatchUserEntity(resource.get(), createItem());
   });
 
   test("should be able to execute the setProperty function", () => {
-    resource.set({ ...camila });
+    const item = resource.get();
 
-    expect(state.value?.past).toBe(undefined);
+    resource.set(createItem());
+
+    expect(item.value?.past).toBe(undefined);
 
     resource.setProperty("past", true);
 
-    expect(state.value?.past).toBe(true);
+    expect(item.value?.past).toBe(true);
 
     resource.clear();
 
@@ -64,18 +84,20 @@ describe("ItemResource", () => {
   test("should be able to execute the has function", () => {
     expect(resource.has()).toBe(false);
 
-    resource.set(camila);
+    resource.set(createItem());
 
     expect(resource.has()).toBe(true);
   });
 
   test("should be able to execute the clear function", () => {
-    resource.set(camila);
+    const item = resource.get();
 
-    expect(state.value).not.toEqual(undefined);
+    resource.set(createItem());
+
+    expect(item.value).not.toEqual(undefined);
 
     resource.clear();
 
-    expect(state.value).toEqual(undefined);
+    expect(item.value).toEqual(undefined);
   });
 });

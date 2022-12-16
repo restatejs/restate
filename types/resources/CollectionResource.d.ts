@@ -1,35 +1,61 @@
-import type { ComputedRef } from "vue";
+import type { ComputedRef, Ref } from "vue";
 
 import type { ResourceEntity, PickNumberOrStringKeys } from ".";
+import type { Indexes } from "./Indexes";
 
-export interface ResourceCollectionState<
+export type State<RI extends ResourceEntity> = Ref<{ data: RI }[]>;
+
+export type ComputedState<RI extends ResourceEntity> = ComputedRef<
+  { data: RI }[]
+>;
+
+export interface CollectionResourceOptions<
   RI extends ResourceEntity,
-  PK extends PickNumberOrStringKeys<RI>
+  Raw extends ResourceEntity = RI,
+  PK extends PickNumberOrStringKeys<Raw> = PickNumberOrStringKeys<Raw>
 > {
-  data: Record<RI[PK], RI | undefined>;
+  primaryKey: PK;
+  indexes: Indexes<Raw[PK]>;
+  state: State<Raw>;
+  computedState: ComputedState<RI>;
+}
+
+export interface SetAllOptions {
+  clear?: boolean;
 }
 
 export declare class CollectionResource<
   RI extends ResourceEntity,
-  PK extends PickNumberOrStringKeys<RI>
+  Raw extends ResourceEntity = RI,
+  PK extends PickNumberOrStringKeys<Raw> = PickNumberOrStringKeys<Raw>
 > {
-  protected state: ResourceCollectionState<RI, PK>;
+  protected readonly $primaryKey: PK;
 
-  public get(id: RI[PK]): Ref<Readonly<RI> | undefined>;
+  protected $indexes: Indexes<Raw[PK]>;
 
-  public getAll(): ComputedRef<(RI | undefined)[]>;
+  protected $state: State<Raw>;
 
-  public set(id: RI[PK], data: RI): Readonly<RI>;
+  protected readonly $computedState: ComputedState<RI>;
 
-  public setProperty<P extends string & keyof RI>(
-    id: RI[PK],
+  constructor(options: CollectionResourceOptions<RI, Raw, PK>);
+
+  public get(id: Raw[PK]): ComputedRef<RI | undefined>;
+
+  public getAll(): ComputedState<RI>;
+
+  public set(id: Raw[PK], data: Raw): number;
+
+  public setAll(collection: Raw[], options?: SetAllOptions): void;
+
+  public setProperty<P extends string & keyof Raw>(
+    id: Raw[PK],
     prop: P,
-    value: RI[P]
-  ): Readonly<RI>;
+    value: Raw[P]
+  ): void;
 
-  public has(id: RI[PK]): boolean;
+  public has(id: Raw[PK]): boolean;
 
-  public delete(id: RI[PK]): void;
+  public delete(id: Raw[PK]): void;
 
   public clear(): void;
 }

@@ -5,34 +5,33 @@ import type {
   UpdateOptions,
   DestroyOptions,
   CollectionModelOptions,
-  CollectionModelDataOptions,
+  DataOptions,
   ArrayCompareFn,
-  ComputedProperties,
   MapAfterRequest,
 } from "types/models/CollectionModel";
 import type { AfterRequest } from "types/models/HTTPModel";
 import type { PickNumberOrStringKeys, ResourceEntity } from "types/resources";
+import type { ComputedState, State } from "types/resources/CollectionResource";
 import type { Load } from "types/utils/load";
 
 import type { ComputedRef, Ref } from "vue";
 import { computed, ref } from "vue";
 
-import { CollectionResource } from "@/resources/CollectionResource";
+import type { CollectionResource } from "@/resources/CollectionResource";
+import { useCollectionResource } from "@/resources/useCollectionResource";
 
 import { HTTPModel } from "./HTTPModel";
 
 class CollectionModel<
   RI extends ResourceEntity,
-  PK extends PickNumberOrStringKeys<RI>,
-  Response extends ResourceEntity = RI
+  Raw extends ResourceEntity = RI,
+  PK extends PickNumberOrStringKeys<Raw> = PickNumberOrStringKeys<Raw>
 > extends HTTPModel {
-  public readonly $resource: CollectionResource<RI, PK>;
+  protected readonly $resource: CollectionResource<RI, Raw, PK>;
 
-  public readonly $primaryKey: string;
+  protected readonly $primaryKey: PK;
 
-  protected readonly $computedProperties: ComputedProperties<RI>;
-
-  protected readonly $mapAfterRequest?: MapAfterRequest<Response>;
+  protected readonly $mapAfterRequest?: MapAfterRequest<Raw>;
 
   constructor({
     resourceName,
@@ -40,21 +39,20 @@ class CollectionModel<
     axios,
     computedProperties = {},
     mapAfterRequest,
-  }: CollectionModelOptions<RI, Response, PK>) {
+  }: CollectionModelOptions<RI, Raw, PK>) {
     super({ resourceName, axios });
 
-    this.$resource = new CollectionResource();
+    this.$resource = useCollectionResource<RI, Raw, PK>({
+      primaryKey,
+      computedProperties,
+    });
 
     this.$primaryKey = primaryKey;
-
-    this.$computedProperties = new Map(Object.entries(computedProperties));
 
     this.$mapAfterRequest = mapAfterRequest;
   }
 
-  public data(
-    options?: CollectionModelDataOptions<RI>
-  ): ComputedRef<(RI | undefined)[]> {
+  public data(options?: DataOptions<RI>): State<RI> {
     const { sort, filter } = options ?? {};
 
     let data = this.$resource.getAll();
@@ -79,11 +77,11 @@ class CollectionModel<
         }
 
         if (sort) {
-          const callback: ArrayCompareFn<RI | undefined> =
+          const callback: ArrayCompareFn<{ data: RI } | undefined> =
             typeof sort === "function"
               ? sort
-              : (a: RI | undefined, b: RI | undefined) =>
-                  `${a?.[sort]}`.localeCompare(`${b?.[sort]}`);
+              : (a: { data: RI } | undefined, b: { data: RI } | undefined) =>
+                  `${a?.data[sort]}`.localeCompare(`${b?.data[sort]}`);
 
           clonedData.sort(callback);
         }
@@ -95,30 +93,19 @@ class CollectionModel<
     return data;
   }
 
-  public item(id: RI[PK]): Ref<RI | undefined> {
+  public item(id: Raw[PK]): Ref<RI | undefined> {
     return this.$resource.get(id);
   }
 
-  public index(options?: IndexOptions): Load<ComputedRef<(RI | undefined)[]>> {
+  public index(options?: IndexOptions): Load<ComputedState<RI>> {
     const responseItems = this.$resource.getAll();
 
-    const afterRequest: AfterRequest<Response[]> = (data) => {
-      const mappedData = this.$mapAfterRequest
-        ? data.map(this.$mapAfterRequest)
-        : data;
+    const afterRequest: AfterRequest<Raw[]> = (data) => {
+      const mappedData = (
+        this.$mapAfterRequest ? data.map(this.$mapAfterRequest) : data
+      ) as Raw[];
 
-      if (options?.clear !== false) {
-        this.$resource.clear();
-      }
-
-      mappedData.forEach((item) => {
-        const refItem = this.$resource.set(
-          (item as any)[this.$primaryKey],
-          item as unknown as RI
-        );
-
-        this.$insertComputedProperties(refItem);
-      });
+      this.$resource.setAll(mappedData, { clear: options?.clear });
     };
 
     return this.request(
@@ -132,17 +119,13 @@ class CollectionModel<
     );
   }
 
-  public show(id: RI[PK], options?: ShowOptions): Load<Ref<RI | undefined>> {
+  public show(id: Raw[PK], options?: ShowOptions): Load<Ref<RI | undefined>> {
     const responseItem = this.$resource.get(id);
 
-    const afterRequest: AfterRequest<Response> = (data) => {
+    const afterRequest: AfterRequest<Raw> = (data) => {
       const mappedData = this.$mapAfterRequest?.(data) ?? data;
 
-      const settedItem = this.$resource.set(id, mappedData as unknown as RI);
-
-      this.$insertComputedProperties(settedItem);
-
-      responseItem.value = settedItem;
+      this.$resource.set(id, mappedData as unknown as Raw);
     };
 
     return this.request(
@@ -160,7 +143,7 @@ class CollectionModel<
     data: P,
     options?: StoreOptions
   ): Load<ComputedRef<RI | undefined>> {
-    const responseItemId: Ref<RI[PK] | null> = ref(null);
+    const responseItemId: Ref<Raw[PK] | null> = ref(null);
 
     const responseItem: ComputedRef<RI | undefined> = computed(() => {
       if (responseItemId.value === null) return undefined;
@@ -168,17 +151,15 @@ class CollectionModel<
       return this.$resource.get(responseItemId.value).value;
     });
 
-    const afterRequest: AfterRequest<Response> = (responseData) => {
+    const afterRequest: AfterRequest<Raw> = (responseData) => {
       const mappedData = this.$mapAfterRequest?.(responseData) ?? responseData;
 
       const item = this.$resource.set(
         (data as any)[this.$primaryKey],
-        mappedData as unknown as RI
+        mappedData as unknown as Raw
       );
 
       responseItemId.value = (data as any)[this.$primaryKey];
-
-      this.$insertComputedProperties(item);
     };
 
     return this.request(
@@ -194,7 +175,7 @@ class CollectionModel<
   }
 
   public update<D = Record<string, unknown>>(
-    id: RI[PK],
+    id: Raw[PK],
     data: D,
     options?: UpdateOptions
   ): Load {
@@ -212,7 +193,7 @@ class CollectionModel<
     });
   }
 
-  public destroy(id: RI[PK], options?: DestroyOptions): Load {
+  public destroy(id: Raw[PK], options?: DestroyOptions): Load {
     const afterRequest = () => this.$resource.delete(id);
 
     return this.request(`/${this.$resourceName}/${id}`, {
@@ -220,22 +201,6 @@ class CollectionModel<
       query: options?.query,
       afterRequest,
     });
-  }
-
-  private $insertComputedProperties(data: RI | undefined): void {
-    if (!data || Reflect.get(data, "_insertedComputedProperties")) {
-      return;
-    }
-
-    this.$computedProperties.forEach((callback, prop) => {
-      if (prop in (data as any)) {
-        throw new Error(`The ${String(prop)} property is already defined.`);
-      }
-
-      data[prop] = computed(() => callback(data)) as any;
-    });
-
-    Reflect.set(data, "_insertedComputedProperties", true);
   }
 }
 

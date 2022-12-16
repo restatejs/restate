@@ -3,57 +3,53 @@ import type {
   ItemModelOptions,
   ShowOptions,
   UpdateOptions,
-  ComputedProperties,
   MapAfterRequest,
 } from "types/models/ItemModel";
-import type { ResourceEntity } from "types/resources";
+import type { ComputedPropertiesMap, ResourceEntity } from "types/resources";
+import type { ComputedState } from "types/resources/ItemResource";
 import type { Load } from "types/utils/load";
 
-import type { Ref } from "vue";
-import { computed } from "vue";
-
-import { ItemResource } from "@/resources/ItemResource";
+import type { ItemResource } from "@/resources/ItemResource";
+import { useItemResource } from "@/resources/useItemResource";
 
 import { HTTPModel } from "./HTTPModel";
 
 class ItemModel<
   RI extends ResourceEntity,
-  Response extends ResourceEntity = RI
+  Raw extends ResourceEntity = RI
 > extends HTTPModel {
-  protected readonly $resource: ItemResource<RI>;
+  protected readonly $resource: ItemResource<RI, Raw>;
 
-  protected readonly $computedProperties: ComputedProperties<RI>;
+  protected readonly $computedProperties: ComputedPropertiesMap<RI>;
 
-  protected readonly $mapAfterRequest?: MapAfterRequest<Response>;
+  protected readonly $mapAfterRequest?: MapAfterRequest<Raw>;
 
   constructor({
     resourceName,
     axios,
     computedProperties = {},
     mapAfterRequest,
-  }: ItemModelOptions<RI, Response>) {
+  }: ItemModelOptions<RI, Raw>) {
     super({ resourceName, axios });
 
-    this.$resource = new ItemResource();
+    this.$resource = useItemResource<RI, Raw>({ computedProperties });
 
     this.$computedProperties = new Map(Object.entries(computedProperties));
 
     this.$mapAfterRequest = mapAfterRequest;
   }
 
-  public data(): Ref<RI | undefined> {
+  public data(): ComputedState<RI> {
     return this.$resource.get();
   }
 
-  public show(options?: ShowOptions): Load<Ref<RI | undefined>> {
+  public show(options?: ShowOptions): Load<ComputedState<RI>> {
     const responseItem = this.$resource.get();
 
-    const afterRequest: AfterRequest<Response> = (data) => {
+    const afterRequest: AfterRequest<Raw> = (data) => {
       const mappedData = this.$mapAfterRequest?.(data) ?? data;
 
-      this.$resource.set(mappedData as RI);
-
-      this.$insertComputedProperties(responseItem as Ref<RI>);
+      this.$resource.set(mappedData as Raw);
     };
 
     return this.request(
@@ -79,22 +75,6 @@ class ItemModel<
       query: options?.query,
       data,
       afterRequest,
-    });
-  }
-
-  private $insertComputedProperties(data: Ref<RI>): void {
-    if (Reflect.get(data.value, "_insertedComputedProperties")) {
-      return;
-    }
-
-    Reflect.set(data.value, "_insertedComputedProperties", true);
-
-    this.$computedProperties.forEach((callback, prop) => {
-      if (prop in data.value) {
-        throw new Error(`The ${String(prop)} property is already defined.`);
-      }
-
-      data.value[prop] = computed(() => callback(data)) as any;
     });
   }
 }

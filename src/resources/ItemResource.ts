@@ -1,47 +1,47 @@
 import type { ResourceEntity } from "types/resources";
-import type { ResourceItemState } from "types/resources/ItemResource";
+import type {
+  ComputedState,
+  ItemResourceOptions,
+  State,
+} from "types/resources/ItemResource";
 
-import type { Ref } from "vue";
-import { ref } from "vue";
+class ItemResource<RI extends ResourceEntity, Raw extends ResourceEntity = RI> {
+  protected $state: State<Raw>;
 
-class ItemResource<RI extends ResourceEntity> {
-  public state: ResourceItemState<RI>;
+  protected readonly $computedState: ComputedState<RI>;
 
-  constructor() {
-    this.state = ref(undefined);
+  constructor({ state, computedState }: ItemResourceOptions<RI, Raw>) {
+    this.$state = state;
+    this.$computedState = computedState;
   }
 
-  public get(): ResourceItemState<RI> {
-    return this.state;
+  public get(): ComputedState<RI> {
+    return this.$computedState;
   }
 
-  public set(data: RI): Ref<RI> {
-    this.state.value = data;
-
-    return this.state as Ref<RI>;
+  public set(data: Raw): void {
+    this.$state.value = data;
   }
 
-  public setProperty<P extends string & keyof RI>(
+  public setProperty<P extends string & keyof Raw>(
     prop: P,
-    value: RI[P]
-  ): Ref<RI> {
-    const item = this.state.value;
+    value: Raw[P]
+  ): void {
+    const item = this.$state.value;
 
     if (!item) {
       throw new Error("Property not updated.");
     }
 
     item[prop] = value;
-
-    return this.state as Ref<RI>;
   }
 
   public has(): boolean {
-    return !!this.state.value;
+    return !!this.$state.value;
   }
 
   public clear(): void {
-    this.state.value = undefined;
+    this.$state.value = undefined;
   }
 }
 
