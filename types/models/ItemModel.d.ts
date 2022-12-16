@@ -1,18 +1,25 @@
 import type { Axios } from "axios";
 import type { Ref } from "vue";
 
-import type { ComputedProperties, ResourceEntity } from "../resources";
-import type { ItemResource } from "../resources/ItemResource";
+import type {
+  ComputedProperties,
+  ComputedPropertiesMap,
+  ResourceEntity,
+} from "../resources";
+import type { ComputedState, ItemResource } from "../resources/ItemResource";
 import type { Load } from "../utils/load";
 import { HTTPModel } from "./HTTPModel";
 
 export type MapAfterRequest<Response> = (item: Response) => unknown;
 
-export interface ItemModelOptions<RI, Response> {
+export interface ItemModelOptions<
+  RI extends ResourceEntity,
+  Raw extends ResourceEntity = RI
+> {
   resourceName: string;
   axios: Axios;
   computedProperties?: ComputedProperties<RI>;
-  mapAfterRequest?: MapAfterRequest<Response>;
+  mapAfterRequest?: MapAfterRequest<Raw>;
 }
 
 export interface BaseOptions {

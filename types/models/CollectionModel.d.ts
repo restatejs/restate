@@ -6,13 +6,21 @@ import type {
   PickNumberOrStringKeys,
   ResourceEntity,
 } from "../resources";
-import type { CollectionResource } from "../resources/CollectionResource";
+import type {
+  CollectionResource,
+  ComputedState,
+  State,
+} from "../resources/CollectionResource";
 import type { Load } from "../utils/load";
 import { HTTPModel } from "./HTTPModel";
 
 export type MapAfterRequest<Raw> = (item: Raw) => unknown;
 
-export interface CollectionModelOptions<RI, Raw, PK> {
+export interface CollectionModelOptions<
+  RI extends ResourceEntity,
+  Raw extends ResourceEntity,
+  PK extends PickNumberOrStringKeys<Raw>
+> {
   resourceName: string;
   axios: Axios;
   primaryKey: PK;
