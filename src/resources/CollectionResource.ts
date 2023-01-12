@@ -1,14 +1,14 @@
-import type { PickNumberOrStringKeys, ResourceEntity } from "types/resources";
+import type {
+  ComputedPropertiesMap,
+  PickNumberOrStringKeys,
+  ResourceEntity,
+} from "types/resources";
 import type {
   CollectionResourceOptions,
-  ComputedState,
   SetAllOptions,
   State,
 } from "types/resources/CollectionResource";
 import type { Indexes } from "types/resources/Indexes";
-
-import type { ComputedRef } from "vue";
-import { computed } from "vue";
 
 class CollectionResource<
   RI extends ResourceEntity,
@@ -19,36 +19,30 @@ class CollectionResource<
 
   protected $indexes: Indexes<Raw[PK]>;
 
-  protected $state: State<Raw>;
+  protected $state: State<RI>;
 
-  protected readonly $computedState: ComputedState<RI>;
+  protected readonly $computedPropertiesMap: ComputedPropertiesMap<Raw>;
 
   constructor({
     primaryKey,
     indexes,
     state,
-    computedState,
+    computedProperties,
   }: CollectionResourceOptions<RI, Raw, PK>) {
     this.$primaryKey = primaryKey;
     this.$indexes = indexes;
     this.$state = state;
-    this.$computedState = computedState;
+    this.$computedPropertiesMap = new Map(Object.entries(computedProperties));
   }
 
-  public get(id: Raw[PK]): ComputedRef<RI | undefined> {
-    const itemComputed = computed(() => {
-      const index = this.$indexes.get(id);
+  public get(id: Raw[PK]): RI | undefined {
+    const index = this.$indexes.get(id);
 
-      return index !== undefined
-        ? this.$computedState.value[index].data
-        : undefined;
-    });
-
-    return itemComputed;
+    return index !== undefined ? this.$state.value[index] : undefined;
   }
 
-  public getAll(): ComputedState<RI> {
-    return this.$computedState;
+  public getAll(): State<RI> {
+    return this.$state;
   }
 
   public set(id: Raw[PK], data: Raw): number {
@@ -57,9 +51,9 @@ class CollectionResource<
     if (index === undefined) {
       index = this.$state.value.length;
       this.$indexes.set(id, index);
-      this.$state.value[index] = { data };
+      this.$state.value[index] = this.$defineItemComputedProperties(data);
     } else {
-      this.$state.value[index].data = data;
+      this.$state.value[index] = this.$defineItemComputedProperties(data);
     }
 
     return index;
@@ -78,7 +72,9 @@ class CollectionResource<
       );
     }
 
-    this.$state.value = collection.map((item) => ({ data: item }));
+    this.$state.value = collection.map((item) =>
+      this.$defineItemComputedProperties(item)
+    );
   }
 
   public setProperty<P extends string & keyof Raw>(
@@ -94,11 +90,13 @@ class CollectionResource<
 
     const item = this.$state.value[index];
 
-    if (item.data === undefined) {
+    if (item === undefined) {
       throw new Error("Property not updated.");
     }
 
-    item.data[prop] = value;
+    (item as any)[prop] = value;
+
+    this.$defineItemComputedProperties(item as unknown as Raw);
   }
 
   public has(id: Raw[PK]): boolean {
@@ -119,6 +117,14 @@ class CollectionResource<
   public clear(): void {
     this.$indexes.clear();
     this.$state.value = [];
+  }
+
+  protected $defineItemComputedProperties(item: Raw): RI {
+    this.$computedPropertiesMap.forEach((callback, key) => {
+      item[key] = callback(item) as any;
+    });
+
+    return item as unknown as RI;
   }
 }
 

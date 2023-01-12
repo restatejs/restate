@@ -23,7 +23,7 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe("models/ItemModel", () => {
   let resourceName: string;
   let itemModel: ItemModel<UserEntity, UserResponse>;
-  let resource: ItemResource<UserEntity>;
+  let resource: ItemResource<UserEntity, UserResponse>;
 
   let itemA: () => UserResponse;
 
@@ -66,11 +66,11 @@ describe("models/ItemModel", () => {
       data: itemA(),
     }));
 
-    const { data, loaded } = itemModel.show();
-
-    expect(data.value).toEqual(undefined);
+    const { loaded } = itemModel.show();
 
     await loaded;
+
+    const data = itemModel.data();
 
     expect(data.value).toHaveProperty("name", itemA().name);
     expect(data.value).toHaveProperty("age", itemA().age);
@@ -82,8 +82,10 @@ describe("models/ItemModel", () => {
     mockedAxios.request.mockImplementation(async () => ({
       data: itemA(),
     }));
-    const { loaded: showLoaded, data } = itemModel.show();
+    const { loaded: showLoaded } = itemModel.show();
     await showLoaded;
+
+    const data = itemModel.data();
 
     expect(data.value?.age).toBe(itemA().age);
 

@@ -85,23 +85,23 @@ describe("models/CollectionModel", () => {
       data: usersList(),
     }));
 
-    const { data, loaded } = collectionModel.index();
-
-    expect(data.value).toEqual([]);
+    const { loaded } = collectionModel.index();
 
     await loaded;
+
+    const data = collectionModel.data();
 
     data.value.forEach((item) => {
       if (!item) throw new Error();
 
-      expect(item.data).toHaveProperty("id");
-      expect(item.data).toHaveProperty("name");
-      expect(item.data).toHaveProperty("age");
-      expect(item.data).toHaveProperty(
+      expect(item).toHaveProperty("id");
+      expect(item).toHaveProperty("name");
+      expect(item).toHaveProperty("age");
+      expect(item).toHaveProperty(
         "height",
-        addMeter(originalItem(item.data.id).height)
+        addMeter(originalItem(item.id).height)
       );
-      expect(item.data).toHaveProperty("agePlus2", plus2(item.data.age));
+      expect(item).toHaveProperty("agePlus2", plus2(item.age));
     });
   });
 
@@ -110,20 +110,17 @@ describe("models/CollectionModel", () => {
       data: itemA(),
     }));
 
-    const { data, loaded } = collectionModel.show(1);
-
-    expect(data.value).toBe(undefined);
+    const { loaded } = collectionModel.show(1);
 
     await loaded;
 
-    expect(data.value).toHaveProperty("id");
-    expect(data.value).toHaveProperty("name");
-    expect(data.value).toHaveProperty("age");
-    expect(data.value).toHaveProperty("height", addMeter(itemA().height));
-    expect(data.value).toHaveProperty(
-      "agePlus2",
-      data.value ? plus2(data.value.age) : null
-    );
+    const data = collectionModel.item(1);
+
+    expect(data).toHaveProperty("id");
+    expect(data).toHaveProperty("name");
+    expect(data).toHaveProperty("age");
+    expect(data).toHaveProperty("height", addMeter(itemA().height));
+    expect(data).toHaveProperty("agePlus2", data ? plus2(data.age) : null);
   });
 
   test("should be able to execute the store function", async () => {
@@ -131,20 +128,17 @@ describe("models/CollectionModel", () => {
       data: itemB(),
     }));
 
-    const { data, loaded } = collectionModel.store(itemB);
-
-    expect(data.value).toBe(undefined);
+    const { loaded } = collectionModel.store(itemB());
 
     await loaded;
 
-    expect(data.value).toHaveProperty("id");
-    expect(data.value).toHaveProperty("name");
-    expect(data.value).toHaveProperty("age");
-    expect(data.value).toHaveProperty("height", addMeter(itemB().height));
-    expect(data.value).toHaveProperty(
-      "agePlus2",
-      data.value ? plus2(data.value.age) : null
-    );
+    const data = collectionModel.item(itemB().id);
+
+    expect(data).toHaveProperty("id");
+    expect(data).toHaveProperty("name");
+    expect(data).toHaveProperty("age");
+    expect(data).toHaveProperty("height", addMeter(itemB().height));
+    expect(data).toHaveProperty("agePlus2", data ? plus2(data.age) : null);
   });
 
   test("should be able to execute the update function", async () => {
@@ -156,10 +150,10 @@ describe("models/CollectionModel", () => {
 
     const refUser = collectionModel.item(1);
 
-    expect(refUser.value?.age).toBe(itemA().age);
-    expect(refUser.value).toHaveProperty(
+    expect(refUser?.age).toBe(itemA().age);
+    expect(refUser).toHaveProperty(
       "agePlus2",
-      refUser.value ? plus2(refUser.value.age) : null
+      refUser ? plus2(refUser.age) : null
     );
 
     const newAge = 22;
@@ -167,8 +161,8 @@ describe("models/CollectionModel", () => {
 
     await loaded;
 
-    expect(refUser.value?.age).toBe(newAge);
-    expect(refUser.value).toHaveProperty("agePlus2", plus2(newAge));
+    expect(refUser?.age).toBe(newAge);
+    expect(refUser).toHaveProperty("agePlus2", plus2(newAge));
   });
 
   test("should be able to execute the destroy function", async () => {
@@ -178,13 +172,13 @@ describe("models/CollectionModel", () => {
 
     await collectionModel.index();
 
-    expect(collectionModel.item(2).value).not.toBe(undefined);
+    expect(collectionModel.item(2)).not.toBe(undefined);
 
     const { loaded } = collectionModel.destroy(itemB().id);
 
     await loaded;
 
-    expect(collectionModel.item(2).value).toBe(undefined);
+    expect(collectionModel.item(2)).toBe(undefined);
   });
 
   test("should be able to execute the item function", async () => {
@@ -196,13 +190,13 @@ describe("models/CollectionModel", () => {
 
     const refUser = collectionModel.item(1);
 
-    expect(refUser.value).toHaveProperty("id");
-    expect(refUser.value).toHaveProperty("name");
-    expect(refUser.value).toHaveProperty("age");
-    expect(refUser.value).toHaveProperty("height", addMeter(itemA().height));
-    expect(refUser.value).toHaveProperty(
+    expect(refUser).toHaveProperty("id");
+    expect(refUser).toHaveProperty("name");
+    expect(refUser).toHaveProperty("age");
+    expect(refUser).toHaveProperty("height", addMeter(itemA().height));
+    expect(refUser).toHaveProperty(
       "agePlus2",
-      refUser.value ? refUser.value.age + 2 : null
+      refUser ? refUser.age + 2 : null
     );
   });
 
@@ -217,43 +211,39 @@ describe("models/CollectionModel", () => {
     data.value.forEach((item) => {
       if (!item) throw new Error();
 
-      expect(item.data).toHaveProperty("id");
-      expect(item.data).toHaveProperty("name");
-      expect(item.data).toHaveProperty("age");
-      expect(item.data).toHaveProperty(
+      expect(item).toHaveProperty("id");
+      expect(item).toHaveProperty("name");
+      expect(item).toHaveProperty("age");
+      expect(item).toHaveProperty(
         "height",
-        addMeter(originalItem(item.data.id).height)
+        addMeter(originalItem(item.id).height)
       );
-      expect(item.data).toHaveProperty(
-        "agePlus2",
-        item.data ? plus2(item.data.age) : null
-      );
+      expect(item).toHaveProperty("agePlus2", item ? plus2(item.age) : null);
     });
 
     const sortedByAge = collectionModel.data({ sort: "age" });
-    expect(sortedByAge.value[0].data).toHaveProperty("name", itemB().name);
-    expect(sortedByAge.value[1].data).toHaveProperty("name", itemA().name);
+    expect(sortedByAge.value[0]).toHaveProperty("name", itemB().name);
+    expect(sortedByAge.value[1]).toHaveProperty("name", itemA().name);
 
     const sortedByHeight = collectionModel.data({ sort: "height" });
-    expect(sortedByHeight.value[0].data).toHaveProperty("name", itemA().name);
-    expect(sortedByHeight.value[1].data).toHaveProperty("name", itemB().name);
+    expect(sortedByHeight.value[0]).toHaveProperty("name", itemA().name);
+    expect(sortedByHeight.value[1]).toHaveProperty("name", itemB().name);
 
     const sortedByFunction = collectionModel.data({
-      sort: (a, b) =>
-        a?.data.age && b?.data.age ? a.data.age - b.data.age : 0,
+      sort: (a, b) => (a?.age && b?.age ? a.age - b.age : 0),
     });
-    expect(sortedByFunction.value[0].data).toHaveProperty("name", itemB().name);
-    expect(sortedByFunction.value[1].data).toHaveProperty("name", itemA().name);
+    expect(sortedByFunction.value[0]).toHaveProperty("name", itemB().name);
+    expect(sortedByFunction.value[1]).toHaveProperty("name", itemA().name);
 
     const filterByAge = collectionModel.data({
-      filter: (item) => (item?.data.age ? item.data.age <= 20 : false),
+      filter: (item) => (item?.age ? item.age <= 20 : false),
     });
-    expect(filterByAge.value[0].data).toHaveProperty("name", itemB().name);
+    expect(filterByAge.value[0]).toHaveProperty("name", itemB().name);
 
     const filterByHeight = collectionModel.data({
       filter: (item) =>
-        item?.data.height ? parseFloat(item.data.height) <= 1.55 : false,
+        item?.height ? parseFloat(item.height) <= 1.55 : false,
     });
-    expect(filterByHeight.value[0].data).toHaveProperty("name", itemA().name);
+    expect(filterByHeight.value[0]).toHaveProperty("name", itemA().name);
   });
 });

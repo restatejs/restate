@@ -5,7 +5,7 @@ import type {
   UpdateOptions,
   MapAfterRequest,
 } from "types/models/ItemModel";
-import type { ComputedPropertiesMap, ResourceEntity } from "types/resources";
+import type { ResourceEntity } from "types/resources";
 import type { ComputedState } from "types/resources/ItemResource";
 import type { Load } from "types/utils/load";
 
@@ -18,9 +18,7 @@ class ItemModel<
   RI extends ResourceEntity,
   Raw extends ResourceEntity = RI
 > extends HTTPModel {
-  protected readonly $resource: ItemResource<RI, Raw>;
-
-  protected readonly $computedProperties: ComputedPropertiesMap<RI>;
+  public readonly $resource: ItemResource<RI, Raw>;
 
   protected readonly $mapAfterRequest?: MapAfterRequest<Raw>;
 
@@ -34,8 +32,6 @@ class ItemModel<
 
     this.$resource = useItemResource<RI, Raw>({ computedProperties });
 
-    this.$computedProperties = new Map(Object.entries(computedProperties));
-
     this.$mapAfterRequest = mapAfterRequest;
   }
 
@@ -43,24 +39,18 @@ class ItemModel<
     return this.$resource.get();
   }
 
-  public show(options?: ShowOptions): Load<ComputedState<RI>> {
-    const responseItem = this.$resource.get();
-
+  public show(options?: ShowOptions): Load {
     const afterRequest: AfterRequest<Raw> = (data) => {
       const mappedData = this.$mapAfterRequest?.(data) ?? data;
 
       this.$resource.set(mappedData as Raw);
     };
 
-    return this.request(
-      `${this.$resourceName}`,
-      {
-        method: "GET",
-        query: options?.query,
-        afterRequest,
-      },
-      responseItem
-    );
+    return this.request(`${this.$resourceName}`, {
+      method: "GET",
+      query: options?.query,
+      afterRequest,
+    });
   }
 
   public update(data: Partial<RI>, options?: UpdateOptions): Load {

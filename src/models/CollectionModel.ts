@@ -11,7 +11,7 @@ import type {
 } from "types/models/CollectionModel";
 import type { AfterRequest } from "types/models/HTTPModel";
 import type { PickNumberOrStringKeys, ResourceEntity } from "types/resources";
-import type { ComputedState, State } from "types/resources/CollectionResource";
+import type { State } from "types/resources/CollectionResource";
 import type { Load } from "types/utils/load";
 
 import type { ComputedRef, Ref } from "vue";
@@ -27,9 +27,9 @@ class CollectionModel<
   Raw extends ResourceEntity = RI,
   PK extends PickNumberOrStringKeys<Raw> = PickNumberOrStringKeys<Raw>
 > extends HTTPModel {
-  protected readonly $resource: CollectionResource<RI, Raw, PK>;
+  public readonly $resource: CollectionResource<RI, Raw, PK>;
 
-  protected readonly $primaryKey: PK;
+  public readonly $primaryKey: PK;
 
   protected readonly $mapAfterRequest?: MapAfterRequest<Raw>;
 
@@ -77,11 +77,11 @@ class CollectionModel<
         }
 
         if (sort) {
-          const callback: ArrayCompareFn<{ data: RI } | undefined> =
+          const callback: ArrayCompareFn<RI | undefined> =
             typeof sort === "function"
               ? sort
-              : (a: { data: RI } | undefined, b: { data: RI } | undefined) =>
-                  `${a?.data[sort]}`.localeCompare(`${b?.data[sort]}`);
+              : (a: RI | undefined, b: RI | undefined) =>
+                  `${a?.[sort]}`.localeCompare(`${b?.[sort]}`);
 
           clonedData.sort(callback);
         }
@@ -93,13 +93,11 @@ class CollectionModel<
     return data;
   }
 
-  public item(id: Raw[PK]): ComputedRef<RI | undefined> {
+  public item(id: Raw[PK]): RI | undefined {
     return this.$resource.get(id);
   }
 
-  public index(options?: IndexOptions): Load<ComputedState<RI>> {
-    const responseItems = this.$resource.getAll();
-
+  public index(options?: IndexOptions): Load {
     const afterRequest: AfterRequest<Raw[]> = (data) => {
       const mappedData = (
         this.$mapAfterRequest ? data.map(this.$mapAfterRequest) : data
@@ -108,69 +106,45 @@ class CollectionModel<
       this.$resource.setAll(mappedData, { clear: options?.clear });
     };
 
-    return this.request(
-      `/${this.$resourceName}`,
-      {
-        method: "GET",
-        query: options?.query,
-        afterRequest,
-      },
-      responseItems
-    );
+    return this.request(`/${this.$resourceName}`, {
+      method: "GET",
+      query: options?.query,
+      afterRequest,
+    });
   }
 
-  public show(id: Raw[PK], options?: ShowOptions): Load<Ref<RI | undefined>> {
-    const responseItem = this.$resource.get(id);
-
+  public show(id: Raw[PK], options?: ShowOptions): Load {
     const afterRequest: AfterRequest<Raw> = (data) => {
       const mappedData = this.$mapAfterRequest?.(data) ?? data;
 
       this.$resource.set(id, mappedData as unknown as Raw);
     };
 
-    return this.request(
-      `/${this.$resourceName}/${id}`,
-      {
-        method: "GET",
-        query: options?.query,
-        afterRequest,
-      },
-      responseItem
-    );
+    return this.request(`/${this.$resourceName}/${id}`, {
+      method: "GET",
+      query: options?.query,
+      afterRequest,
+    });
   }
 
   public store<P = Record<string, unknown>>(
     data: P,
     options?: StoreOptions
-  ): Load<ComputedRef<RI | undefined>> {
-    const responseItemId: Ref<Raw[PK] | null> = ref(null);
-
-    const responseItem: ComputedRef<RI | undefined> = computed(() => {
-      if (responseItemId.value === null) return undefined;
-
-      return this.$resource.get(responseItemId.value).value;
-    });
-
+  ): Load {
     const afterRequest: AfterRequest<Raw> = (responseData) => {
       const mappedData = this.$mapAfterRequest?.(responseData) ?? responseData;
 
       const itemId = (data as any)[this.$primaryKey];
 
       this.$resource.set(itemId, mappedData as unknown as Raw);
-
-      responseItemId.value = itemId;
     };
 
-    return this.request(
-      `/${this.$resourceName}`,
-      {
-        method: "POST",
-        query: options?.query,
-        data,
-        afterRequest,
-      },
-      responseItem
-    );
+    return this.request(`/${this.$resourceName}`, {
+      method: "POST",
+      query: options?.query,
+      data,
+      afterRequest,
+    });
   }
 
   public update<D = Record<string, unknown>>(

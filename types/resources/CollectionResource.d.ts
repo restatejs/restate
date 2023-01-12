@@ -1,13 +1,9 @@
-import type { ComputedRef, Ref } from "vue";
+import type { Ref } from "vue";
 
 import type { ResourceEntity, PickNumberOrStringKeys } from ".";
 import type { Indexes } from "./Indexes";
 
-export type State<RI extends ResourceEntity> = Ref<{ data: RI }[]>;
-
-export type ComputedState<RI extends ResourceEntity> = ComputedRef<
-  { data: RI }[]
->;
+export type State<Raw extends ResourceEntity> = Ref<Raw[]>;
 
 export interface CollectionResourceOptions<
   RI extends ResourceEntity,
@@ -16,8 +12,8 @@ export interface CollectionResourceOptions<
 > {
   primaryKey: PK;
   indexes: Indexes<Raw[PK]>;
-  state: State<Raw>;
-  computedState: ComputedState<RI>;
+  state: State<RI>;
+  computedProperties: ComputedProperties<RI>;
 }
 
 export interface SetAllOptions {
@@ -33,15 +29,15 @@ export declare class CollectionResource<
 
   protected $indexes: Indexes<Raw[PK]>;
 
-  protected $state: State<Raw>;
+  protected $state: State<RI>;
 
-  protected readonly $computedState: ComputedState<RI>;
+  protected readonly $computedPropertiesMap: ComputedPropertiesMap<Raw>;
 
   constructor(options: CollectionResourceOptions<RI, Raw, PK>);
 
-  public get(id: Raw[PK]): ComputedRef<RI | undefined>;
+  public get(id: Raw[PK]): RI | undefined;
 
-  public getAll(): ComputedState<RI>;
+  public getAll(): State<RI>;
 
   public set(id: Raw[PK], data: Raw): number;
 
@@ -58,4 +54,6 @@ export declare class CollectionResource<
   public delete(id: Raw[PK]): void;
 
   public clear(): void;
+
+  protected $defineItemComputedProperties(item: Raw): RI;
 }

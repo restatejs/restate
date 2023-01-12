@@ -32,7 +32,7 @@ describe("CollectionResource", () => {
 
   let plus2: (num: number) => number;
   let toMatchUserEntity: (
-    expectedUser: { value: UserEntity | undefined },
+    expectedUser: UserEntity | undefined,
     responseUser: UserResponse
   ) => void;
 
@@ -46,10 +46,10 @@ describe("CollectionResource", () => {
 
     plus2 = (num) => num + 2;
     toMatchUserEntity = (expectedUser, responseUser) => {
-      expect(expectedUser.value).toMatchObject(responseUser);
-      expect(expectedUser.value).toHaveProperty(
+      expect(expectedUser).toMatchObject(responseUser);
+      expect(expectedUser).toHaveProperty(
         "agePlus2",
-        expectedUser.value && plus2(expectedUser.value.age)
+        expectedUser && plus2(expectedUser.age)
       );
     };
   });
@@ -59,20 +59,17 @@ describe("CollectionResource", () => {
   });
 
   test("should be able to execute the get function", () => {
-    const item = resource.get(camila.id);
-    expect(item.value).toBe(undefined);
+    expect(resource.get(camila.id)).toBe(undefined);
 
     resource.set(camila.id, { ...camila });
 
     const settedItem = resource.get(camila.id);
 
-    [item, settedItem].forEach((target) => {
-      expect(target.value).toMatchObject(camila);
-      expect(target.value).toHaveProperty(
-        "agePlus2",
-        target.value && plus2(target.value.age)
-      );
-    });
+    expect(settedItem).toMatchObject(camila);
+    expect(settedItem).toHaveProperty(
+      "agePlus2",
+      settedItem && plus2(settedItem.age)
+    );
   });
 
   test("should be able to execute the getAll function", () => {
@@ -85,9 +82,7 @@ describe("CollectionResource", () => {
     const settedItems = resource.getAll();
 
     [items, settedItems].forEach((targets) => {
-      targets.value.forEach((item, i) =>
-        toMatchUserEntity({ value: item.data }, users[i])
-      );
+      targets.value.forEach((item, i) => toMatchUserEntity(item, users[i]));
     });
   });
 
@@ -95,31 +90,24 @@ describe("CollectionResource", () => {
     const items = resource.getAll();
     expect(items.value.length).toBe(0);
 
-    const item = resource.get(camila.id);
-    expect(item.value).toBe(undefined);
+    expect(resource.get(camila.id)).toBe(undefined);
 
     resource.set(camila.id, { ...camila });
 
     expect(items.value.length).toBe(1);
-    toMatchUserEntity(item, camila);
+    toMatchUserEntity(resource.get(camila.id), camila);
   });
 
   test("should be able to execute the setAll function", () => {
     const items = resource.getAll();
     expect(items.value.length).toBe(0);
 
-    const itemA = resource.get(camila.id);
-    const itemB = resource.get(deborah.id);
-
-    expect(itemA.value).toBe(undefined);
-    expect(itemB.value).toBe(undefined);
+    expect(resource.get(camila.id)).toBe(undefined);
+    expect(resource.get(deborah.id)).toBe(undefined);
 
     resource.setAll([camila, deborah]);
 
     expect(items.value.length).toBe(2);
-
-    toMatchUserEntity(itemA, camila);
-    toMatchUserEntity(itemB, deborah);
 
     toMatchUserEntity(resource.get(camila.id), camila);
     toMatchUserEntity(resource.get(deborah.id), deborah);
@@ -130,11 +118,11 @@ describe("CollectionResource", () => {
 
     const item = resource.get(camila.id);
 
-    expect(item.value?.past).toBe(undefined);
+    expect(item?.past).toBe(undefined);
 
     resource.setProperty(camila.id, "past", true);
 
-    expect(item.value?.past).toBe(true);
+    expect(item?.past).toBe(true);
 
     expect(() => resource.setProperty(deborah.id, "past", true)).toThrow();
   });
@@ -149,15 +137,14 @@ describe("CollectionResource", () => {
 
   test("should be able to execute the delete function", () => {
     resource.set(camila.id, camila);
-    const item = resource.get(camila.id);
     const items = resource.getAll();
 
-    expect(item.value).not.toBe(undefined);
+    expect(resource.get(camila.id)).not.toBe(undefined);
 
     resource.delete(camila.id);
 
-    expect(item.value).toBe(undefined);
-    expect(resource.get(camila.id).value).toBe(undefined);
+    expect(resource.get(camila.id)).toBe(undefined);
+    expect(resource.get(camila.id)).toBe(undefined);
 
     expect(items.value).toEqual([]);
     expect(resource.getAll().value).toEqual([]);
@@ -168,23 +155,17 @@ describe("CollectionResource", () => {
     resource.setAll(users);
 
     const items = resource.getAll();
-    const itemA = resource.get(camila.id);
-    const itemB = resource.get(deborah.id);
 
-    items.value.forEach((item, i) =>
-      toMatchUserEntity({ value: item.data }, users[i])
-    );
-    toMatchUserEntity(itemA, camila);
-    toMatchUserEntity(itemB, deborah);
+    items.value.forEach((item, i) => toMatchUserEntity(item, users[i]));
+    toMatchUserEntity(resource.get(camila.id), camila);
+    toMatchUserEntity(resource.get(deborah.id), deborah);
 
     resource.clear();
 
     expect(items.value).toEqual([]);
-    expect(itemA.value).toBe(undefined);
-    expect(itemB.value).toBe(undefined);
 
     expect(resource.getAll().value).toEqual([]);
-    expect(resource.get(camila.id).value).toBe(undefined);
-    expect(resource.get(deborah.id).value).toBe(undefined);
+    expect(resource.get(camila.id)).toBe(undefined);
+    expect(resource.get(deborah.id)).toBe(undefined);
   });
 });

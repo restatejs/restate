@@ -1,11 +1,6 @@
 import type { Axios } from "axios";
-import type { Ref } from "vue";
 
-import type {
-  ComputedProperties,
-  ComputedPropertiesMap,
-  ResourceEntity,
-} from "../resources";
+import type { ComputedProperties, ResourceEntity } from "../resources";
 import type { ComputedState, ItemResource } from "../resources/ItemResource";
 import type { Load } from "../utils/load";
 import { HTTPModel } from "./HTTPModel";
@@ -34,9 +29,7 @@ export declare class ItemModel<
   RI extends ResourceEntity,
   Raw extends ResourceEntity = RI
 > extends HTTPModel {
-  protected readonly $resource: ItemResource<RI, Raw>;
-
-  protected readonly $computedProperties: ComputedPropertiesMap<RI>;
+  public readonly $resource: ItemResource<RI, Raw>;
 
   protected readonly $mapAfterRequest?: MapAfterRequest<Raw>;
 
