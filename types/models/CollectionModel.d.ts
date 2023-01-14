@@ -69,14 +69,14 @@ export declare class CollectionModel<
 
   public item(id: Raw[PK]): RI | undefined;
 
-  public index(options?: IndexOptions): Load<State<RI>>;
+  public index(options?: IndexOptions): Load;
 
-  public show(id: Raw[PK], options?: ShowOptions): Load<RI | undefined>;
+  public show(id: Raw[PK], options?: ShowOptions): Load;
 
   public store<P = Record<string, unknown>>(
     data: P,
     options?: StoreOptions
-  ): Load<ComputedRef<RI | undefined>>;
+  ): Load;
 
   public update<D = Record<string, unknown>>(
     id: Raw[PK],

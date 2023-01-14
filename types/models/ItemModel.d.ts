@@ -37,7 +37,7 @@ export declare class ItemModel<
 
   public data(): ComputedState<RI>;
 
-  public show(options?: ShowOptions): Load<ComputedState<RI>>;
+  public show(options?: ShowOptions): Load;
 
   public update(data: Partial<RI>, options?: UpdateOptions): Load;
 }
