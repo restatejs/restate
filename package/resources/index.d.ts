@@ -5,15 +5,15 @@ export type ResourceEntity = Record<string, any>;
 export type PickNumberOrStringKeys<O extends ResourceEntity> = string &
   keyof PickProperties<O, number | string>;
 
-export type ComputedProperty<RI extends ResourceEntity, Return = unknown> = (
-  item: RI
+export type ComputedProperty<Raw extends ResourceEntity, Return = unknown> = (
+  item: Raw
 ) => Return;
 
-export type ComputedProperties<RI extends ResourceEntity> = {
-  [Prop in keyof RI]?: ComputedProperty<RI, RI[Prop]>;
+export type ComputedProperties<Raw extends ResourceEntity> = {
+  [Prop in keyof Raw]?: ComputedProperty<Raw, Raw[Prop]>;
 };
 
-export type ComputedPropertiesMap<RI extends ResourceEntity> = Map<
-  string & keyof RI,
-  ComputedProperty<RI>
+export type ComputedPropertiesMap<Raw extends ResourceEntity> = Map<
+  string & keyof Raw,
+  ComputedProperty<Raw>
 >;

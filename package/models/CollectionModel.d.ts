@@ -1,5 +1,5 @@
 import type { Axios } from "axios";
-import type { ComputedRef, Ref } from "vue";
+import type { ComputedRef } from "vue";
 
 import type {
   ComputedProperties,
@@ -8,7 +8,6 @@ import type {
 } from "../resources";
 import type {
   CollectionResource,
-  ComputedState,
   State,
 } from "../resources/CollectionResource";
 import type { Load } from "../utils/load";
@@ -49,10 +48,8 @@ export type ArrayCompareFn<O> = (a: O, b: O) => number;
 export type ArrayFilterFn<O> = (value: O, index: number, array: O[]) => boolean;
 
 export interface DataOptions<RI> {
-  sort?: keyof RI | ArrayCompareFn<{ data: RI } | undefined>;
-  filter?:
-    | ArrayFilterFn<{ data: RI } | undefined>
-    | ArrayFilterFn<{ data: RI } | undefined>[];
+  sort?: keyof RI | ArrayCompareFn<RI | undefined>;
+  filter?: ArrayFilterFn<RI | undefined> | ArrayFilterFn<RI | undefined>[];
 }
 
 export declare class CollectionModel<
@@ -60,9 +57,9 @@ export declare class CollectionModel<
   Raw extends ResourceEntity = RI,
   PK extends PickNumberOrStringKeys<Raw> = PickNumberOrStringKeys<Raw>
 > extends HTTPModel {
-  protected readonly $resource: CollectionResource<RI, Raw, PK>;
+  public readonly $resource: CollectionResource<RI, Raw, PK>;
 
-  protected readonly $primaryKey: PK;
+  public readonly $primaryKey: PK;
 
   protected readonly $mapAfterRequest?: MapAfterRequest<Raw>;
 
@@ -70,16 +67,16 @@ export declare class CollectionModel<
 
   public data(options?: DataOptions<RI>): State<RI>;
 
-  public item(id: Raw[PK]): ComputedRef<RI | undefined>;
+  public item(id: Raw[PK]): RI | undefined;
 
-  public index(options?: IndexOptions): Load<ComputedState<RI>>;
+  public index(options?: IndexOptions): Load;
 
-  public show(id: Raw[PK], options?: ShowOptions): Load<Ref<RI | undefined>>;
+  public show(id: Raw[PK], options?: ShowOptions): Load;
 
   public store<P = Record<string, unknown>>(
     data: P,
     options?: StoreOptions
-  ): Load<ComputedRef<RI | undefined>>;
+  ): Load;
 
   public update<D = Record<string, unknown>>(
     id: Raw[PK],
