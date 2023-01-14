@@ -14,8 +14,7 @@ import type { PickNumberOrStringKeys, ResourceEntity } from "types/resources";
 import type { State } from "types/resources/CollectionResource";
 import type { Load } from "types/utils/load";
 
-import type { ComputedRef, Ref } from "vue";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 
 import type { CollectionResource } from "@/resources/CollectionResource";
 import { useCollectionResource } from "@/resources/useCollectionResource";
